@@ -1,0 +1,19 @@
+{
+  "name": "jz-bot",
+  "version": "1.0.0",
+  "description": "This is a test bot for discord servers",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "author": "James Hedayet Zaman",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  },
+  "dependencies": {
+    "discord.js": "^12.5.1",
+    "dotenv": "^8.2.0"
+  }
+}
