@@ -1,8 +1,25 @@
 require('dotenv').config();
-const {Client} = require('discord.js');
+const Discord = require('discord.js');
+const mysql = require('mysql');
+const client = new Discord.Client();
 
-const client = new Client();
 const PREFIX = '!';
+
+const db = mysql.createConnection({
+   host: 'localhost',
+   user: 'root',
+   password: process.env.DATABASE_PASSWORD
+});
+
+db.connect(err => {
+   if(err) {
+      console.log('Cannot connect to database');
+   }
+   else {
+      console.log('connected to database');
+   }
+});
+
 
 const jokes = [
    'Today at the bank, an old lady asked me to help check her balance. So I pushed her over.',
@@ -22,8 +39,93 @@ const jokes = [
    'My wife told me I had to stop acting like a flamingo. So I had to put my foot down.'
 ]
 
-guessgamestart = 'false';
-guessNumber = NaN;
+// Variable declarations.
+let guessgamestart = 'false';
+let guessNumber = NaN;
+let sql = false;
+
+
+// Functions of the bot.
+const sqlCommands = (message) => {
+   // if it is a create database query.
+   if(message.content.trim().toLowerCase().startsWith('create database')) {
+      // extracting database name from message.
+      let splt = message.content.trim().split(' ');
+      let databaseName = splt[splt.length - 1];
+      if(databaseName[databaseName.length - 1] === ';') {
+         databaseName = databaseName.slice(0, databaseName.length - 1);
+      }
+      // creating the channel on 'SQL' category.
+      message.guild.channels.create(databaseName, {
+         type: 'text',
+         parent: '828334984577679451'
+      })
+      const sql = `CREATE DATABASE IF NOT EXISTS ${databaseName}`;
+      db.query(sql);
+   }
+   if(message.content.trim().toLowerCase().startsWith('drop database')) {
+      // extracting database name from message.
+      let splt = message.content.trim().split(' ');
+      let databaseName = splt[splt.length - 1];
+      if(databaseName[databaseName.length - 1] === ';') {
+         databaseName = databaseName.slice(0, databaseName.length - 1);
+      }
+      const sql = `DROP DATABASE IF EXISTS ${databaseName}`;
+      db.query(sql, (err, result) => {
+         if(err) {
+            message.channel.send(err.sqlMessage);
+         }
+         else {
+            message.channel.delete();
+         }
+      })
+   }
+   else {
+      // get the channel name
+      const channelName = message.guild.channels.cache.get(message.channel.id)['name'];
+      const sql = `USE ${channelName}`;
+      // first set the database to channel name.
+      db.query(sql, (err, result) => {
+         if(err) {
+            console.error(err)
+            message.channel.send(err.sqlMessage);
+         }
+         const sql = message.content;
+         // if it is a select query.
+         if(message.content.trim().toLowerCase().startsWith('select')) {
+            const sql = message.content; // the message is the query.
+            db.query(sql, (err, result) => {
+               if(err) {
+                  console.error(err)
+                  message.channel.send(err.sqlMessage);
+               }
+               else {
+                  // Turn the whole object to a string.
+                  msg = '';
+                  for(let i = 0; i < result.length; ++i) {
+                     for(j in result[i]) {
+                        msg += `${j}: ${result[i][j]}\n`;
+                     }
+                     msg += '\n';
+                  }
+                  // send that string.
+                  message.channel.send(msg);
+               }
+            })
+         }
+         // any other query.
+         else {
+            db.query(sql, (err, result) => {
+               if(err) {
+                  console.log(err);
+                  message.channel.send(err.sqlMessage);
+               }
+            })
+         }
+      })
+   }
+}
+
 
 client.on('message', async (message) => {
    if(message.author.bot) return;
@@ -64,29 +166,12 @@ client.on('message', async (message) => {
             console.log('There was some error while banning!');
          }
       }
-      else if(CMD_NAME === 'gay') {
-         if(message.member.id !== '546626744233230354') {
-            message.channel.send('Yes you are!');
-         }
-         else {
-            message.channel.send('Nah, you are straight!');
-         }
-      }
       else if(CMD_NAME === 'whohaspower') {
          message.channel.send('James!');
       }
-      else if(CMD_NAME === 'tellmeajoke') {
+      else if(CMD_NAME === 'joke') {
          let index = Math.floor(Math.random() * 16);
-         console.log(index);
          message.channel.send(jokes[index]);
-      }
-      else if(CMD_NAME === 'soulmate') {
-         if(message.member.id === '699340553237823580') {
-            message.reply('Your soulmate is ESHA!');
-         }
-         else {
-            message.reply(`You don't have a soulmate!`);
-         }
       }
       else if(CMD_NAME === 'weight') {
          message.reply(`Your weight is ${Math.ceil(Math.random() * 70 + 30)} kilograms`);
@@ -128,14 +213,22 @@ client.on('message', async (message) => {
             message.reply('It is a smaller number')
          }
       }
+      else if(CMD_NAME === 'sqlstart') {
+         sql = true;
+         message.channel.send('SQL Command mode on.')
+      }
+      else if(CMD_NAME === 'sqlend') {
+         sql = false;
+         message.channel.send('SQL Command mode off.')
+      }
+   }
+   else if(sql) {
+      sqlCommands(message);
    }
    else if(message.toString().includes('bot')) {
       if(message.member.id !== '546626744233230354') {
          message.reply(`HEY! Don't talk behind my back!`);
       }
-   }
-   else if(message.toString().includes('nude') || message.toString().includes('porn') || message.toString().includes('hentai') || message.toString().includes('dildo') || message.toString().includes('yaoi')) {
-      message.reply(`Behave youself!`);
    }
 })
 
