@@ -2,7 +2,7 @@
 const bot = require('./bot.js');
 const express = require('express');
 
-// Objects.
+// Declaring Objects.
 const app = express();
 
 // starting the bot.
