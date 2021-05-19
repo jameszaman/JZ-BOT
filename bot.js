@@ -9,6 +9,35 @@ const client = new Discord.Client();
 const PREFIX = '!';
 let guessgamestart = 'false';
 let guessNumber = NaN;
+let doc = `
+	Welcome to JZ-BOT documentation.\n
+	************************************
+	All commands must start with '!'
+	
+	***List of commands***
+	kick [id]
+		Used to kick any member.
+	ban [id]
+		Used to ban any member.
+	doc
+		Get the documentation for this BOT!
+	whohaspower
+		Says the name of the most omnipotent being in all of existence.
+	joke
+		Says a random joke from the list of jokes in the database.
+	weight
+		Guesses your weight.
+	*Guess Game Commands*
+		guessgamestart
+			starts the guess game.
+		guessgameend
+			ends the gues game.
+		guess
+			to guess the randomly generated number.
+
+
+	
+`
 
 // Jokes. Need to put them in a database.
 const jokes = [
@@ -37,14 +66,18 @@ client.on('message', async (message) => {
 		const [CMD_NAME, ...args] = message.content
 																.trim().substring(PREFIX.length).split(/\s+/)
 
+		// For a given command do something.
+		// Admin commands.
 		if(CMD_NAME === 'kick') {
+			// Making sure that the user has permission to do this.
 			if(!message.member.hasPermission('KICK_MEMBERS')) {
 				return message.reply('You do not have permission to use that command');
 			}
+			// In case it they did not give who to ban.
 			if(args.length === 0) return message.reply('Please provide an ID');
-
+			// get the member whos ID was given.
 			const member = message.guild.members.cache.get(args[0]);
-			if(member) {
+			if(member) { // If the member exists.
 				member.kick()
 				.then(member => {
 					message.channel.send(`${member} was kicked.`)
@@ -70,6 +103,10 @@ client.on('message', async (message) => {
 				console.log('There was some error while banning!');
 			}
 		}
+		// General purpose commands.
+		else if(CMD_NAME === 'doc') {
+			message.reply(doc)
+		}
 		else if(CMD_NAME === 'whohaspower') {
 			message.channel.send('James!');
 		}
@@ -80,17 +117,18 @@ client.on('message', async (message) => {
 		else if(CMD_NAME === 'weight') {
 			message.reply(`Your weight is ${Math.ceil(Math.random() * 70 + 30)} kilograms`);
 		}
+		// Commands for guess game.
 		else if(CMD_NAME === 'guessgamestart') {
 			if(guessgamestart === 'true') {
 				message.reply('The game is already on')
 			}
-			else {
-				if(args[0] && args[1]) {
+			else { // if the game has not already been started start the game based on the given range.
+				if(args[0] && args[1]) { // Here args have the range for the randomly generated number.
 					guessgamestart = 'true';
 					guessNumber = Math.ceil(Math.random() * Number(args[1]) + - args[0]);
 					message.channel.send('Game started!');
 				}
-				else {
+				else { // In case numbers were not given.
 					message.reply('Give start and end numbers');
 				}
 			}
@@ -119,7 +157,7 @@ client.on('message', async (message) => {
 		}
 	}
 	else if(message.toString().includes('bot')) {
-		if(message.member.id !== '546626744233230354') {
+		if(message.member.id !== '546626744233230354') { // If the one who sent the message is not @author.
 			message.reply(`HEY! Don't talk behind my back!`);
 		}
 	}
