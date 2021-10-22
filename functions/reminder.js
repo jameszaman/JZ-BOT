@@ -1,5 +1,24 @@
 const { Reminder } = '../database/database.js';
 
+
+// *** Some necessary variables ***
+
+// All the words one might say to refer time.
+const timeWords = [
+  "year",
+  "years",
+  "month",
+  "months",
+  "day",
+  "days",
+  "hour",
+  "hours",
+  "minute",
+  "minutes",
+  "second",
+  "seconds",
+];
+
 // *** Misc Functions ***.
 
 // This funnction takes an object which lets it know much time to add.
@@ -14,7 +33,6 @@ function getNewTime(extraTime) {
     hour = 0,
     minute = 0,
     second = 0;
-  console.log(extraTime);
 
   // Adding extra time to appropiate variables.
   if (extraTime.year) {
@@ -48,18 +66,46 @@ function getNewTime(extraTime) {
 }
 
 function extractReminderMessage(fullString, lastTimeIndex) {
-  return fullString.reduce((prev, cur, index) => {
+  let message =  fullString.reduce((prev, cur, index) => {
     if (index > lastTimeIndex) {
       return `${prev} ${cur}`;
     }
     return "";
   });
+  if(message.startsWith(" to ")) {
+    message = message.substring(4, message.length);
+  }
+  else {
+    message = message.substring(1, message.length)
+  }
+  return message;
 }
 
 
 function setReminder(message) {
   const messageSplit = message.content.split(' ');
-  console.log(messageSplit);
+  // We need to know what type of reminder it is.
+  if (messageSplit[1] === "after") {
+    extraTime = {};
+    let lastTimeIndex = -1;
+    timeWords.forEach((time) => {
+      const index = messageSplit.indexOf(time);
+      if (index !== -1) {
+        const key = messageSplit[index].replace(/s/g, "");
+        extraTime[[key]] = Number(messageSplit[index - 1]);
+        if (index > lastTimeIndex) {
+          lastTimeIndex = index;
+        }
+      }
+    });
+    if (lastTimeIndex === -1) {
+      console.log("Error");
+    } else {
+      console.log(new Date());
+      console.log(getNewTime(extraTime));
+      console.log(extractReminderMessage(messageSplit, lastTimeIndex));
+    }
+  }
 }
 
 module.exports.setReminder = setReminder;
