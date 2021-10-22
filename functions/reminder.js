@@ -47,6 +47,15 @@ function getNewTime(extraTime) {
   );
 }
 
+function extractReminderMessage(fullString, lastTimeIndex) {
+  return fullString.reduce((prev, cur, index) => {
+    if (index > lastTimeIndex) {
+      return `${prev} ${cur}`;
+    }
+    return "";
+  });
+}
+
 
 function setReminder(message) {
   const messageSplit = message.content.split(' ');
