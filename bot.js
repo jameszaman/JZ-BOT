@@ -3,7 +3,7 @@ require('dotenv').config();
 const Discord = require('discord.js');
 
 // User defined imports.
-const { setReminder } = require('./reminder.js');
+const { setReminder } = require('./functions/reminder.js');
 
 
 // Declaring objects.
@@ -38,9 +38,6 @@ let doc = `
 			ends the gues game.
 		guess
 			to guess the randomly generated number.
-
-
-	
 `
 
 // Jokes. Need to put them in a database.
@@ -164,9 +161,7 @@ client.on('message', async (message) => {
 		}
 	}
 	else if(message.toString().includes('bot')) {
-		if(message.member.id !== '546626744233230354') { // If the one who sent the message is not @author.
-			message.reply(`HEY! Don't talk behind my back!`);
-		}
+		message.reply(`HEY! Don't talk behind my back!`);
 	}
 })
 

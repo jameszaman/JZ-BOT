@@ -1,5 +1,4 @@
-const { Reminder } = './database.js';
-
+const { Reminder } = '../database/database.js';
 
 function setReminder(message) {
   const messageSplit = message.content.split(' ');

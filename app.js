@@ -12,6 +12,10 @@ app.get('/', function(req, res) {
 // starting the bot.
 bot();
 
+const port = process.env.PORT || 3000;
+
 // Starting server.
-app.listen(3000)
+app.listen(port, () => {
+	console.log('Server is running. 😁');
+});
 
