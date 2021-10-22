@@ -2,6 +2,10 @@
 require('dotenv').config();
 const Discord = require('discord.js');
 
+// User defined imports.
+const { setReminder } = require('./reminder.js');
+
+
 // Declaring objects.
 const client = new Discord.Client();
 
@@ -154,6 +158,9 @@ client.on('message', async (message) => {
 			else if(guessNumber < Number(args[0])){
 				message.reply('It is a smaller number')
 			}
+		}
+		else if(CMD_NAME === 'remind') {
+			setReminder(message);
 		}
 	}
 	else if(message.toString().includes('bot')) {
