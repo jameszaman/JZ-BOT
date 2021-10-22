@@ -10,7 +10,7 @@ const PREFIX = '!';
 let guessgamestart = 'false';
 let guessNumber = NaN;
 let doc = `
-	Welcome to JZ-BOT documentation.\n
+	Welcome to JZ-BOT documentation.
 	************************************
 	All commands must start with '!'
 	
