@@ -1,4 +1,4 @@
-function ban(message, args) {
+async function ban(message, args) {
   if(!message.member.hasPermission('BAN_MEMBERS')) {
     return message.reply('You do not have permission to use that command');
   }
