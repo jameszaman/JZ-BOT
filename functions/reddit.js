@@ -1,39 +1,58 @@
 // Imports
-const { spawn } = require('child_process');
-require('dotenv').config();
+const { spawnSync } = require("child_process");
+require("dotenv").config();
 
 // User defined modules.
-const Reddit = require('../database/redditModel');
+const Reddit = require("../database/redditModel");
 
-function updateRedditPosts(subreddits) {
-  subreddits.forEach(subreddit => {
-    // Initial arguments are what is necessary for Reddit API.
-    const arguments = [`${__dirname}/reddit.py`, process.env.CLIENT_ID, process.env.CLIENT_SECRET, process.env.USER_AGENT, subreddit];
-    // Run python with necessary arguments for reddit API.
-    const reddit = spawn('python', arguments);
+async function updateRedditPosts(client) {
+  // return;
+  // Get information about all the subreddits of every discord channel.
+  const discordReddits = await Reddit.find();
 
-    reddit.stdout.on('data', (data) => {
-      // Converting the recieved string to array.
-      let posts = data.toString();
-      posts = posts.replace(/['"\s\[\]]/g, '').split(',')
-      // Adding the data to database.
-      // First check if the subreddit 
-      const reddit = Reddit({
-        discord_channel_id: 10,
-        subreddits: [
-          {
-            subreddit,
-            posts
-          }
-        ]
+  // Must update for each discord channel.
+  // Code seems a bit more complex as we cannot use forEach.
+  // forEach cannot be used because we need async functions.
+  for (let discordIndex in discordReddits) {
+    for (let subredditIndex in discordReddits[discordIndex].subreddits) {
+      // Initial arguments are what is necessary for Reddit API.
+      const arguments = [
+        `${__dirname}/reddit.py`,
+        process.env.CLIENT_ID,
+        process.env.CLIENT_SECRET,
+        process.env.USER_AGENT,
+        discordReddits[discordIndex].subreddits[subredditIndex].subreddit,
+      ];
+
+      // Run python with necessary arguments for reddit API.
+      const reddit = await spawnSync("python", arguments, {
+        stdio: "pipe",
+        encoding: "utf-8",
       });
-      reddit.save();
-    });
-
-    reddit.stderr.on('data', (data) => {
-      console.error(data.toString());
-    });
-  });
+      let posts = reddit.output[1];
+      posts = posts.replace(/['"\s\[\]]/g, "").split(",");
+      // Update the posts list in the subreddit.
+      posts.forEach((post) => {
+        // if the post does not already exists, add it to the database and
+        // Also send it discord.
+        if (
+          !discordReddits[discordIndex].subreddits[
+            subredditIndex
+          ].posts.includes(post)
+        ) {
+          // Sending it to discord.
+          client.channels.cache
+            .get(discordReddits[discordIndex].discord_channel_id)
+            .send(post);
+          // Adding it to the database.
+          discordReddits[discordIndex].subreddits[subredditIndex].posts.push(
+            post
+          );
+        }
+      });
+    }
+    discordReddits[discordIndex].save();
+  }
 }
 
 async function addSubreddit(discord_channel_id, subreddit) {
@@ -44,31 +63,28 @@ async function addSubreddit(discord_channel_id, subreddit) {
     subreddits: [
       {
         subreddit,
-        posts: []
-      }
-    ]
+        posts: [],
+      },
+    ],
   });
   reddit.save().catch(async () => {
     // In case a subreddit already exists from this channel, update the subreddit list.
-    const reddit = await Reddit.findOne({discord_channel_id});
+    const reddit = await Reddit.findOne({ discord_channel_id });
     let alreadyExists = false;
-    reddit.subreddits.forEach(savedSubreddit => {
-      if(savedSubreddit.subreddit == subreddit) {
+    reddit.subreddits.forEach((savedSubreddit) => {
+      if (savedSubreddit.subreddit == subreddit) {
         alreadyExists = true;
       }
     });
-    if(!alreadyExists) {
-      reddit.subreddits = [...reddit.subreddits, {subreddit, posts:[]}],
-      reddit.save().catch((err) => {
-        // Not handling any error right now.
-        console.error(err);
-      });
+    if (!alreadyExists) {
+      (reddit.subreddits = [...reddit.subreddits, { subreddit, posts: [] }]),
+        reddit.save().catch((err) => {
+          // Not handling any error right now.
+          console.error(err);
+        });
     }
-  })
+  });
 }
-
-// const args = ['memes']
-// updateRedditPosts(args);
 
 module.exports.addSubreddit = addSubreddit;
 module.exports.updateRedditPosts = updateRedditPosts;

@@ -1,5 +1,4 @@
-const { Reminder } = '../database/database.js';
-
+const { Reminder } = "../database/database.js";
 
 // *** Some necessary variables ***
 
@@ -66,24 +65,22 @@ function getNewTime(extraTime) {
 }
 
 function extractReminderMessage(fullString, lastTimeIndex) {
-  let message =  fullString.reduce((prev, cur, index) => {
+  let message = fullString.reduce((prev, cur, index) => {
     if (index > lastTimeIndex) {
       return `${prev} ${cur}`;
     }
     return "";
   });
-  if(message.startsWith(" to ")) {
+  if (message.startsWith(" to ")) {
     message = message.substring(4, message.length);
-  }
-  else {
-    message = message.substring(1, message.length)
+  } else {
+    message = message.substring(1, message.length);
   }
   return message;
 }
 
-
 function setReminder(message) {
-  const messageSplit = message.content.split(' ');
+  const messageSplit = message.content.split(" ");
   // We need to know what type of reminder it is.
   if (messageSplit[1] === "after") {
     extraTime = {};
@@ -99,7 +96,7 @@ function setReminder(message) {
       }
     });
     if (lastTimeIndex === -1) {
-      console.log("Error");
+      console.error("Error");
     } else {
       console.log(new Date());
       console.log(getNewTime(extraTime));
