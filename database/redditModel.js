@@ -1,4 +1,4 @@
-import { Schema, Model } from './database';
+const { Schema, Model } = require('./database');
 
 // Creating Schemas.
 // This took me way longer than what I expected.
@@ -15,10 +15,7 @@ const redditSchema = Schema({
           type: String,
           required: true
         },
-        posts: {
-          type: [String],
-          required: true
-        },
+        posts: [String],
       }
     ],
     required: true

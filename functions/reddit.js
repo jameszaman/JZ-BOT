@@ -1,6 +1,9 @@
+// Imports
 const { spawn } = require('child_process');
 require('dotenv').config();
 
+// User defined modules.
+const Reddit = require('../database/redditModel');
 
 function updateRedditPosts(subreddits) {
   subreddits.forEach(subreddit => {
@@ -11,9 +14,20 @@ function updateRedditPosts(subreddits) {
 
     reddit.stdout.on('data', (data) => {
       // Converting the recieved string to array.
-      let str = data.toString();
-      str = str.replace(/['"\s\[\]]/g, '').split(',')
-      console.log(str);
+      let posts = data.toString();
+      posts = posts.replace(/['"\s\[\]]/g, '').split(',')
+      // Adding the data to database.
+      // First check if the subreddit 
+      const reddit = Reddit({
+        discord_channel_id: 10,
+        subreddits: [
+          {
+            subreddit,
+            posts
+          }
+        ]
+      });
+      reddit.save();
     });
 
     reddit.stderr.on('data', (data) => {
@@ -22,5 +36,5 @@ function updateRedditPosts(subreddits) {
   });
 }
 
-const args = ['memes', 'pics']
+const args = ['memes']
 updateRedditPosts(args);
