@@ -23,10 +23,10 @@ client.on('message', async (message) => {
 		// For a given command do something.
 		// Admin commands.
 		if(CMD_NAME === 'kick') {
-			kick();
+			kick(message, args);
 		}
 		else if(CMD_NAME === 'ban') {
-			ban();
+			ban(message, args);
 		}
 		// General purpose commands.
 		else if(CMD_NAME === 'doc') {
