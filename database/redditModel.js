@@ -5,20 +5,25 @@ const { Schema, Model } = require('./database');
 // Feel free to improve it.
 const redditSchema = Schema({
   discord_channel_id: {
-    type: Number,
-    required: true
+    type: String,
+    required: true,
+    unique: true,
   },
   subreddits: {
     type: [
       {
+        _id: false,
         subreddit: {
           type: String,
-          required: true
+          unique: true,
         },
-        posts: [String],
+        posts: [{
+          type: String,
+          unique: true,
+        }],
       }
     ],
-    required: true
+    required: true,
   },
   
 });

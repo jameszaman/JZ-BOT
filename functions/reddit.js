@@ -36,5 +36,39 @@ function updateRedditPosts(subreddits) {
   });
 }
 
-const args = ['memes']
-updateRedditPosts(args);
+async function addSubreddit(discord_channel_id, subreddit) {
+  // If there was no previous subreddit from that channel.
+  // Add a new entry of subreddit for that channel.
+  const reddit = Reddit({
+    discord_channel_id: discord_channel_id,
+    subreddits: [
+      {
+        subreddit,
+        posts: []
+      }
+    ]
+  });
+  reddit.save().catch(async () => {
+    // In case a subreddit already exists from this channel, update the subreddit list.
+    const reddit = await Reddit.findOne({discord_channel_id});
+    let alreadyExists = false;
+    reddit.subreddits.forEach(savedSubreddit => {
+      if(savedSubreddit.subreddit == subreddit) {
+        alreadyExists = true;
+      }
+    });
+    if(!alreadyExists) {
+      reddit.subreddits = [...reddit.subreddits, {subreddit, posts:[]}],
+      reddit.save().catch((err) => {
+        // Not handling any error right now.
+        console.error(err);
+      });
+    }
+  })
+}
+
+// const args = ['memes']
+// updateRedditPosts(args);
+
+module.exports.addSubreddit = addSubreddit;
+module.exports.updateRedditPosts = updateRedditPosts;
