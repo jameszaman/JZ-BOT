@@ -11,12 +11,5 @@ reddit = praw.Reddit(
 )
 
 # Get the hot posts.
-posts = reddit.subreddit(sys.argv[4]).hot(limit=3)
+posts = reddit.subreddit(sys.argv[4]).hot(limit=5)
 urls = [post.url for post in posts]
-
-# Get the top posts.
-# Currently getting new posts for the sake of testing.
-posts = reddit.subreddit(sys.argv[4]).new(limit=3)
-for post in posts:
-  urls.append(post.url)
-print(urls)
