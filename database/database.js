@@ -4,7 +4,7 @@ require("dotenv").config(); // Getting all the environment variables.
 
 // Database connection
 mongoose.connect(
-  `mongodb+srv://${DATABASE_USER}:${process.env.DATABASE_PASSWORD}@main.adjy4.mongodb.net/botdatabase?retryWrites=true&w=majority`,
+  `mongodb+srv://${process.env.DATABASE_USER}:${process.env.DATABASE_PASSWORD}@main.adjy4.mongodb.net/botdatabase?retryWrites=true&w=majority`,
   { useNewUrlParser: true, useUnifiedTopology: true }
 );
 const db = mongoose.connection;
