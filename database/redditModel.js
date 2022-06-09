@@ -1,4 +1,4 @@
-const { Schema, Model } = require('./database');
+const { Schema, Model } = require("./database");
 
 // Creating Schemas.
 // This took me way longer than what I expected.
@@ -15,18 +15,17 @@ const redditSchema = Schema({
         _id: false,
         subreddit: {
           type: String,
-          unique: true,
         },
-        posts: [{
-          type: String,
-          unique: true,
-        }],
-      }
+        posts: [
+          {
+            type: String,
+            // unique: true,
+          },
+        ],
+      },
     ],
     required: true,
   },
-  
 });
-
 
 module.exports = Model("reddit", redditSchema);

@@ -55,7 +55,11 @@ async function updateRedditPosts(client) {
   }
 }
 
-async function addSubreddit(discord_channel_id, subreddit) {
+async function addSubreddit(message) {
+  // Extracting the necessary data.
+  discord_channel_id = message.channel.id.toString();
+  subreddit = message.content.split(" ")[1];
+
   // If there was no previous subreddit from that channel.
   // Add a new entry of subreddit for that channel.
   const reddit = Reddit({
@@ -70,6 +74,7 @@ async function addSubreddit(discord_channel_id, subreddit) {
   reddit.save().catch(async () => {
     // In case a subreddit already exists from this channel, update the subreddit list.
     const reddit = await Reddit.findOne({ discord_channel_id });
+    // We also need to make sure that the same subreddit is not being added again.
     let alreadyExists = false;
     reddit.subreddits.forEach((savedSubreddit) => {
       if (savedSubreddit.subreddit == subreddit) {
@@ -82,6 +87,8 @@ async function addSubreddit(discord_channel_id, subreddit) {
           // Not handling any error right now.
           console.error(err);
         });
+    } else {
+      message.reply("This subreddit has already been added to this channel.");
     }
   });
 }

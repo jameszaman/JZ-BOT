@@ -42,10 +42,7 @@ client.on("message", async (message) => {
     } else if (CMD_NAME === "remind") {
       setReminder(message);
     } else if (CMD_NAME === "addsubreddit") {
-      addSubreddit(
-        message.channel.id.toString(),
-        message.content.split(" ")[1]
-      );
+      addSubreddit(message);
     }
   }
 });

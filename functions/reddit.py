@@ -13,3 +13,6 @@ reddit = praw.Reddit(
 # Get the hot posts.
 posts = reddit.subreddit(sys.argv[4]).hot(limit=5)
 urls = [post.url for post in posts]
+
+# Printing the urls so that JavaScript can recieve them.
+print(urls)
