@@ -12,7 +12,9 @@ let doc = `
 		Used to kick any member.
 	weight
 		Guesses your weight.
-`
+	addsubreddit [subreddit]
+		hot posts from added subreddit will be posted to the channel where this command is used.
+`;
 
 function sendDocumentation(message) {
   message.reply(doc);
