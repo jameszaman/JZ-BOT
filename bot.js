@@ -52,7 +52,7 @@ client.on("message", async (message) => {
 // This one will work every minute.
 setInterval(() => {
   updateRedditPosts(client);
-}, 60000);
+}, process.env.BOT_CALL_TIME);
 
 // Exporting the starting function to use in another file.
 module.exports = () => client.login(process.env.DISCORD_BOT_TOKEN);

@@ -7,6 +7,7 @@ require("dotenv").config();
 const Reddit = require("../database/redditModel");
 
 async function updateRedditPosts(client) {
+  console.time();
   // return;
   // Get information about all the subreddits of every discord channel.
   const discordReddits = await Reddit.find();
@@ -15,6 +16,8 @@ async function updateRedditPosts(client) {
   // Code seems a bit more complex as we cannot use forEach.
   // forEach cannot be used because we need async functions.
   for (let discordIndex in discordReddits) {
+    // tracking if the channel still exists.
+    let channelDeleted = false;
     for (let subredditIndex in discordReddits[discordIndex].subreddits) {
       // Initial arguments are what is necessary for Reddit API.
       const arguments = [
@@ -33,27 +36,48 @@ async function updateRedditPosts(client) {
       let posts = reddit.output[1];
       posts = posts.replace(/['"\s\[\]]/g, "").split(",");
       // Update the posts list in the subreddit.
-      posts.forEach((post) => {
-        // if the post does not already exists, add it to the database and
-        // Also send it discord.
+      for (let post of posts) {
+        // if the post does not already exists in the database,
+        // send it to discord and add it to the database.
         if (
           !discordReddits[discordIndex].subreddits[
             subredditIndex
           ].posts.includes(post)
         ) {
-          // Sending it to discord.
-          client.channels.cache
-            .get(discordReddits[discordIndex].discord_channel_id)
-            .send(post);
-          // Adding it to the database.
-          discordReddits[discordIndex].subreddits[subredditIndex].posts.push(
-            post
-          );
+          try {
+            // Sending it to discord.
+            client.channels.cache
+              .get(discordReddits[discordIndex].discord_channel_id)
+              .send(post);
+            console.log("Reached Here");
+            // Adding it to the database.
+            discordReddits[discordIndex].subreddits[subredditIndex].posts.push(
+              post
+            );
+          } catch (err) {
+            // Channel does not exist.
+            channelDeleted = true;
+            break;
+          }
         }
-      });
+      }
     }
-    discordReddits[discordIndex].save();
+    if (channelDeleted) {
+      // If a channel has been deleted from discrod,
+      // we also need to delete it from our database.
+      Reddit.deleteOne(discordReddits[discordIndex])
+        .then(() => {
+          // This .then() is needed for delete. No idea why though.
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    } else {
+      // If everything is fine, updating the database.
+      discordReddits[discordIndex].save();
+    }
   }
+  console.timeEnd();
 }
 
 async function addSubreddit(message) {
@@ -107,7 +131,7 @@ async function addSubreddit(message) {
       });
     })
     .catch(() => {
-      message.reply("Subreddit does not exist!");
+      message.reply(`Subreddit \`${subreddit}\` does not exist!`);
     });
 }
 
