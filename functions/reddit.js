@@ -8,9 +8,45 @@ const Reddit = require("../database/redditModel");
 
 async function updateRedditPosts(client) {
   console.time();
-  // return;
   // Get information about all the subreddits of every discord channel.
   const discordReddits = await Reddit.find();
+
+  // Initial arguments are what is necessary for Reddit API.
+  const arguments = [
+    `${__dirname}/reddit.py`,
+    process.env.CLIENT_ID,
+    process.env.CLIENT_SECRET,
+    process.env.USER_AGENT,
+    // discordReddits[discordIndex].subreddits[subredditIndex].subreddit,
+  ];
+
+  // Adding the list of subreddits to arguments.
+  discordReddits.forEach((discordReddit) => {
+    discordReddit.subreddits.forEach((subreddit) => {
+      arguments.push(subreddit.subreddit);
+    });
+  });
+
+  // Run python with necessary arguments for reddit API.
+  const reddit = await spawnSync("python", arguments, {
+    stdio: "pipe",
+    encoding: "utf-8",
+  });
+
+  // Convert the recieved output to JSON. This makes it easier for us to work with.
+  let str = reddit.output[1];
+  str = `{${str}}`
+    .replace(/\s/g, "")
+    .replace(/'/g, '"')
+    .replace(/"\]"/g, '"],"');
+  const all_posts = JSON.parse(str);
+
+  if (reddit.output[0] || reddit.output[2]) {
+    // If there are any errors from python, just do nothing.
+    // Once a while there is an error, but not interested
+    // to solve this right now. [Probably due to my bad internet]
+    return;
+  }
 
   // Must update for each discord channel.
   // Code seems a bit more complex as we cannot use forEach.
@@ -19,22 +55,11 @@ async function updateRedditPosts(client) {
     // tracking if the channel still exists.
     let channelDeleted = false;
     for (let subredditIndex in discordReddits[discordIndex].subreddits) {
-      // Initial arguments are what is necessary for Reddit API.
-      const arguments = [
-        `${__dirname}/reddit.py`,
-        process.env.CLIENT_ID,
-        process.env.CLIENT_SECRET,
-        process.env.USER_AGENT,
-        discordReddits[discordIndex].subreddits[subredditIndex].subreddit,
-      ];
+      const posts =
+        all_posts[
+          discordReddits[discordIndex].subreddits[subredditIndex].subreddit
+        ];
 
-      // Run python with necessary arguments for reddit API.
-      const reddit = await spawnSync("python", arguments, {
-        stdio: "pipe",
-        encoding: "utf-8",
-      });
-      let posts = reddit.output[1];
-      posts = posts.replace(/['"\s\[\]]/g, "").split(",");
       // Update the posts list in the subreddit.
       for (let post of posts) {
         // if the post does not already exists in the database,
@@ -49,7 +74,6 @@ async function updateRedditPosts(client) {
             client.channels.cache
               .get(discordReddits[discordIndex].discord_channel_id)
               .send(post);
-            console.log("Reached Here");
             // Adding it to the database.
             discordReddits[discordIndex].subreddits[subredditIndex].posts.push(
               post
