@@ -6,7 +6,11 @@ const Discord = require("discord.js");
 const { setReminder } = require("./functions/reminder.js");
 const { sendDocumentation } = require("./functions/documentation");
 const { ban, kick } = require("./functions/moderator");
-const { addSubreddit, updateRedditPosts } = require("./functions/reddit");
+const {
+  addSubreddit,
+  removeSubreddit,
+  updateRedditPosts,
+} = require("./functions/reddit");
 
 // Declaring objects.
 const client = new Discord.Client();
@@ -43,6 +47,8 @@ client.on("message", async (message) => {
       setReminder(message);
     } else if (CMD_NAME === "addsubreddit") {
       addSubreddit(message);
+    } else if (CMD_NAME === "removesubreddit") {
+      removeSubreddit(message);
     }
   }
 });

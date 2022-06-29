@@ -7,7 +7,6 @@ require("dotenv").config();
 const Reddit = require("../database/redditModel");
 
 async function updateRedditPosts(client) {
-  console.time();
   // Get information about all the subreddits of every discord channel.
   const discordReddits = await Reddit.find();
 
@@ -101,19 +100,19 @@ async function updateRedditPosts(client) {
       discordReddits[discordIndex].save();
     }
   }
-  console.timeEnd();
 }
 
 async function addSubreddit(message) {
   // Extracting the necessary data.
-  discord_channel_id = message.channel.id.toString();
-  subreddit = message.content.split(" ")[1];
+  const discord_channel_id = message.channel.id.toString();
+  const subreddit = message.content.split(" ")[1];
 
   // First we send a head request to the subreddit.
   // And check if we get a proper response.
   // If there is not proper response, the subreddit
   // Does not exist. We only add if the subreddit exists.
   const url = "https://www.reddit.com/r";
+  console.log(`${url}/${subreddit}`);
   axios
     .head(`${url}/${subreddit}`)
     .then(() => {
@@ -154,10 +153,28 @@ async function addSubreddit(message) {
         }
       });
     })
-    .catch(() => {
+    .catch((err) => {
+      console.log(err.response.status);
       message.reply(`Subreddit \`${subreddit}\` does not exist!`);
     });
 }
 
+async function removeSubreddit(message) {
+  // Extracting the necessary data.
+  const discord_channel_id = message.channel.id.toString();
+  const subredditName = message.content.split(" ")[1];
+
+  const discord_channel = await Reddit.findOne({ discord_channel_id });
+  let index = -1;
+  for (let i in discord_channel.subreddits) {
+    if (discord_channel.subreddits[i].subreddit == subredditName) {
+      index = i;
+    }
+  }
+  discord_channel.subreddits.splice(index, 1);
+  discord_channel.save();
+}
+
 module.exports.addSubreddit = addSubreddit;
+module.exports.removeSubreddit = removeSubreddit;
 module.exports.updateRedditPosts = updateRedditPosts;
