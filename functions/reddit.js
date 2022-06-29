@@ -172,7 +172,9 @@ async function removeSubreddit(message) {
     }
   }
   discord_channel.subreddits.splice(index, 1);
-  discord_channel.save();
+  discord_channel.save().catch((err) => {
+    console.log(err);
+  });
 }
 
 module.exports.addSubreddit = addSubreddit;
