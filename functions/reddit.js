@@ -173,7 +173,13 @@ async function removeSubreddit(message) {
   }
   // If index does not change, the subreddit is not in database.
   if (index == -1) {
-    message.reply("Room was never added.");
+    message.reply("Subreddit was never added.");
+  } else if (discord_channel.subreddits.length == 1) {
+    Reddit.findOneAndRemove({ discord_channel_id }, (err) => {
+      if (err) {
+        console.log(err);
+      }
+    });
   } else {
     discord_channel.subreddits.splice(index, 1);
     discord_channel.save().catch((err) => {
