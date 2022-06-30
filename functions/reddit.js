@@ -171,10 +171,15 @@ async function removeSubreddit(message) {
       index = i;
     }
   }
-  discord_channel.subreddits.splice(index, 1);
-  discord_channel.save().catch((err) => {
-    console.log(err);
-  });
+  // If index does not change, the subreddit is not in database.
+  if (index == -1) {
+    message.reply("Room was never added.");
+  } else {
+    discord_channel.subreddits.splice(index, 1);
+    discord_channel.save().catch((err) => {
+      console.log(err);
+    });
+  }
 }
 
 module.exports.addSubreddit = addSubreddit;
