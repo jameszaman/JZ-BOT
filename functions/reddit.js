@@ -5,6 +5,7 @@ require("dotenv").config();
 
 // User defined modules.
 const Reddit = require("../database/redditModel");
+const e = require("express");
 
 async function updateRedditPosts(client) {
   // Get information about all the subreddits of every discord channel.
@@ -93,7 +94,7 @@ async function updateRedditPosts(client) {
           // This .then() is needed for delete. No idea why though.
         })
         .catch((err) => {
-          console.log(err);
+          console.error(err);
         });
     } else {
       // If everything is fine, updating the database.
@@ -112,7 +113,6 @@ async function addSubreddit(message) {
   // If there is not proper response, the subreddit
   // Does not exist. We only add if the subreddit exists.
   const url = "https://www.reddit.com/r";
-  console.log(`${url}/${subreddit}`);
   axios
     .head(`${url}/${subreddit}`)
     .then(() => {
@@ -154,7 +154,6 @@ async function addSubreddit(message) {
       });
     })
     .catch((err) => {
-      console.log(err.response.status);
       message.reply(`Subreddit \`${subreddit}\` does not exist!`);
     });
 }
@@ -166,6 +165,10 @@ async function removeSubreddit(message) {
 
   const discord_channel = await Reddit.findOne({ discord_channel_id });
   let index = -1;
+  if (!discord_channel) {
+    message.reply(`No Subreddit is added to this channel.`);
+    return;
+  }
   for (let i in discord_channel.subreddits) {
     if (discord_channel.subreddits[i].subreddit == subredditName) {
       index = i;
@@ -177,17 +180,33 @@ async function removeSubreddit(message) {
   } else if (discord_channel.subreddits.length == 1) {
     Reddit.findOneAndRemove({ discord_channel_id }, (err) => {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
     });
   } else {
     discord_channel.subreddits.splice(index, 1);
     discord_channel.save().catch((err) => {
-      console.log(err);
+      console.error(err);
     });
+  }
+}
+
+async function redditInfo(message) {
+  const discord_channel_id = message.channel.id.toString();
+  const discord_channel = await Reddit.findOne({ discord_channel_id });
+  let info = `Added subreddits | Posts\n-------------------------------\n`;
+  discord_channel.subreddits.forEach((subreddit) => {
+    info += `${subreddit.subreddit}\t-\t${subreddit.posts.length}\n`;
+  });
+  // console.log(discord_channel);
+  if (discord_channel) {
+    message.channel.send(info);
+  } else {
+    message.reply("You don't have any subreddits in this channel.");
   }
 }
 
 module.exports.addSubreddit = addSubreddit;
 module.exports.removeSubreddit = removeSubreddit;
 module.exports.updateRedditPosts = updateRedditPosts;
+module.exports.redditInfo = redditInfo;

@@ -10,6 +10,7 @@ const {
   addSubreddit,
   removeSubreddit,
   updateRedditPosts,
+  redditInfo,
 } = require("./functions/reddit");
 
 // Declaring objects.
@@ -49,6 +50,8 @@ client.on("message", async (message) => {
       addSubreddit(message);
     } else if (CMD_NAME === "removesubreddit") {
       removeSubreddit(message);
+    } else if (CMD_NAME === "redditinfo") {
+      redditInfo(message);
     }
   }
 });
