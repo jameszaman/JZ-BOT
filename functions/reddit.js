@@ -2,10 +2,10 @@
 const { spawnSync } = require("child_process");
 const axios = require("axios");
 require("dotenv").config();
+const { MessageEmbed } = require("discord.js");
 
 // User defined modules.
 const Reddit = require("../database/redditModel");
-const e = require("express");
 
 async function updateRedditPosts(client) {
   // Get information about all the subreddits of every discord channel.
@@ -192,11 +192,19 @@ async function removeSubreddit(message) {
 }
 
 async function redditInfo(message) {
+  // Getting basic data.
   const discord_channel_id = message.channel.id.toString();
   const discord_channel = await Reddit.findOne({ discord_channel_id });
-  let info = `Added subreddits | Posts\n-------------------------------\n`;
+
+  // Generating the info message.
+  const lineLength = 30;
+  let info = `Added subreddits | Posts\n`;
+  info += "-".repeat(lineLength) + "\n";
+
   discord_channel.subreddits.forEach((subreddit) => {
-    info += `${subreddit.subreddit}\t-\t${subreddit.posts.length}\n`;
+    info += `${subreddit.subreddit}${"-".repeat(
+      lineLength - subreddit.subreddit.length
+    )}${subreddit.posts.length}\n`;
   });
   // console.log(discord_channel);
   if (discord_channel) {
