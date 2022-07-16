@@ -102,6 +102,12 @@ function setReminder(message) {
       console.log(getNewTime(extraTime));
       console.log(extractReminderMessage(messageSplit, lastTimeIndex));
     }
+  } else if (messageSplit[1] === "at") {
+    message.reply("Not Implemented yet");
+  } else if (messageSplit[1] === "every") {
+    message.reply("Not Implemented yet");
+  } else {
+    message.reply("Please give proper reminder type. [after, at, every]");
   }
 }
 

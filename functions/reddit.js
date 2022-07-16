@@ -199,14 +199,12 @@ async function redditInfo(message) {
   // Generating the info message.
   const lineLength = 30;
   let info = `Added subreddits | Posts\n`;
-  info += "-".repeat(lineLength) + "\n";
 
   discord_channel.subreddits.forEach((subreddit) => {
     info += `${subreddit.subreddit}${"-".repeat(
       lineLength - subreddit.subreddit.length
     )}${subreddit.posts.length}\n`;
   });
-  // console.log(discord_channel);
   if (discord_channel) {
     message.channel.send(info);
   } else {
