@@ -13,19 +13,5 @@ db.once("open", function () {
   console.log("Database connected");
 });
 
-// Creating Schemas.
-const reminderSchema = new mongoose.Schema({
-  name: {
-    String,
-  },
-  time: {
-    type: [Date],
-  },
-  user_id: {
-    type: Number,
-  },
-});
-
-module.exports.Reminder = mongoose.model("reminder", reminderSchema);
 module.exports.Schema = mongoose.Schema;
 module.exports.Model = mongoose.model;
