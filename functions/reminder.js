@@ -88,7 +88,11 @@ function setReminder(message, client) {
     timeWords.forEach((time) => {
       const index = messageSplit.indexOf(time);
       if (index !== -1) {
-        const key = messageSplit[index].replace(/s/g, "");
+        let key = messageSplit[index];
+
+        if (key.endsWith("s")) {
+          key = key.substring(0, key.length - 1);
+        }
         extraTime[[key]] = Number(messageSplit[index - 1]);
         if (index > lastTimeIndex) {
           lastTimeIndex = index;
@@ -105,6 +109,8 @@ function setReminder(message, client) {
       );
       // Basically when the reminder should be sent. It is in miliseconds.
       const reminderTime = getNewTime(extraTime) - new Date();
+      console.log(extraTime);
+      console.log(getNewTime(extraTime));
 
       // We use a timeout to send the user the reminder
       // After the given time.
