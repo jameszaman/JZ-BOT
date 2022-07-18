@@ -3,20 +3,14 @@ const { Reminder } = "../database/database.js";
 // *** Some necessary variables ***
 
 // All the words one might say to refer time.
-const timeWords = [
-  "year",
-  "years",
-  "month",
-  "months",
-  "day",
-  "days",
-  "hour",
-  "hours",
-  "minute",
-  "minutes",
-  "second",
-  "seconds",
-];
+const timeWords = {
+  year: ["year", "years"],
+  month: ["month", "months"],
+  day: ["day", "days"],
+  hour: ["hour", "hours"],
+  minute: ["minute", "minutes", "min", "mins"],
+  second: ["second", "seconds", "sec", "secs"],
+};
 
 // *** Misc Functions ***.
 
@@ -85,20 +79,20 @@ function setReminder(message, client) {
   if (messageSplit[1] === "after") {
     extraTime = {};
     let lastTimeIndex = -1;
-    timeWords.forEach((time) => {
-      const index = messageSplit.indexOf(time);
-      if (index !== -1) {
-        let key = messageSplit[index];
-
-        if (key.endsWith("s")) {
-          key = key.substring(0, key.length - 1);
-        }
-        extraTime[[key]] = Number(messageSplit[index - 1]);
-        if (index > lastTimeIndex) {
-          lastTimeIndex = index;
+    for (word in timeWords) {
+      for (time of timeWords[word]) {
+        const index = messageSplit.indexOf(time);
+        if (index !== -1) {
+          extraTime[[word]] = Number(messageSplit[index - 1]);
+          // As we are checking for time from the whole string,
+          // We do not know where is the time part of the message ends.
+          // We need to save this to know where the message starts.
+          if (index > lastTimeIndex) {
+            lastTimeIndex = index;
+          }
         }
       }
-    });
+    }
     if (lastTimeIndex === -1) {
       message.reply("Please give proper reminder message.");
     } else {
@@ -109,8 +103,6 @@ function setReminder(message, client) {
       );
       // Basically when the reminder should be sent. It is in miliseconds.
       const reminderTime = getNewTime(extraTime) - new Date();
-      console.log(extraTime);
-      console.log(getNewTime(extraTime));
 
       // We use a timeout to send the user the reminder
       // After the given time.
