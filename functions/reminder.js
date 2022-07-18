@@ -7,7 +7,7 @@ const timeWords = {
   year: ["year", "years"],
   month: ["month", "months"],
   day: ["day", "days"],
-  hour: ["hour", "hours"],
+  hour: ["hour", "hours", "hrs"],
   minute: ["minute", "minutes", "min", "mins"],
   second: ["second", "seconds", "sec", "secs"],
 };
@@ -76,7 +76,22 @@ function extractReminderMessage(fullString, lastTimeIndex) {
 function setReminder(message, client) {
   const messageSplit = message.content.split(" ");
   // We need to know what type of reminder it is.
-  if (messageSplit[1] === "after") {
+  let remindType, remindPerson;
+  // We need to check if a user was specified who should be reminded.
+  if (messageSplit[1] == "me") {
+    remindType = messageSplit[2];
+    remindPerson = message.author.id;
+  } else if (messageSplit[1].startsWith("<@")) {
+    remindPerson = messageSplit[1].substring(2, messageSplit[1].length - 1);
+    remindType = messageSplit[2];
+  }
+  // If none was specified, the sender should be reminded.
+  else {
+    remindType = messageSplit[1]; // Starts from index 1 was none was specified.
+    remindPerson = message.author.id;
+  }
+
+  if (remindType === "after") {
     extraTime = {};
     let lastTimeIndex = -1;
     for (word in timeWords) {
@@ -107,12 +122,13 @@ function setReminder(message, client) {
       // We use a timeout to send the user the reminder
       // After the given time.
       setTimeout(() => {
-        client.users.cache.get(message.author.id).send(reminderMessage);
+        client.users.cache.get(remindPerson).send(reminderMessage);
       }, reminderTime);
+      message.reply("Your reminder has been added!");
     }
-  } else if (messageSplit[1] === "at") {
+  } else if (remindType === "at") {
     message.reply("Not Implemented yet");
-  } else if (messageSplit[1] === "every") {
+  } else if (remindType === "every") {
     message.reply("Not Implemented yet");
   } else {
     message.reply("Please give proper reminder type. [after, at, every]");
