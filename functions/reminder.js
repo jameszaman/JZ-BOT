@@ -79,7 +79,7 @@ function extractReminderMessage(fullString, lastTimeIndex) {
   return message;
 }
 
-function setReminder(message) {
+function setReminder(message, client) {
   const messageSplit = message.content.split(" ");
   // We need to know what type of reminder it is.
   if (messageSplit[1] === "after") {
@@ -96,11 +96,21 @@ function setReminder(message) {
       }
     });
     if (lastTimeIndex === -1) {
-      console.error("Error");
+      message.reply("Please give proper reminder message.");
     } else {
-      console.log(new Date());
-      console.log(getNewTime(extraTime));
-      console.log(extractReminderMessage(messageSplit, lastTimeIndex));
+      // Get the message and when to remind.
+      const reminderMessage = extractReminderMessage(
+        messageSplit,
+        lastTimeIndex
+      );
+      // Basically when the reminder should be sent. It is in miliseconds.
+      const reminderTime = getNewTime(extraTime) - new Date();
+
+      // We use a timeout to send the user the reminder
+      // After the given time.
+      setTimeout(() => {
+        client.users.cache.get(message.author.id).send(reminderMessage);
+      }, reminderTime);
     }
   } else if (messageSplit[1] === "at") {
     message.reply("Not Implemented yet");

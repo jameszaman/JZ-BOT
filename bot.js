@@ -45,7 +45,7 @@ client.on("message", async (message) => {
         `Your weight is ${Math.ceil(Math.random() * 70 + 30)} kilograms`
       );
     } else if (CMD_NAME === "remind") {
-      setReminder(message);
+      setReminder(message, client);
     } else if (CMD_NAME === "addsubreddit") {
       addSubreddit(message);
     } else if (CMD_NAME === "removesubreddit") {
