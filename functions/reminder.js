@@ -74,16 +74,28 @@ function extractReminderMessage(fullString, lastTimeIndex) {
 }
 
 function setReminder(message, client) {
-  const messageSplit = message.content.split(" ");
+  // If me/my/myself/mine is used in the message, we would assume that they
+  // Are talking about the author of the message.
+  message.content = message.content.replace(
+    /\bme\b|\bmyself\b/g,
+    `<@${message.author.id}>`
+  );
+  message.content = message.content.replace(
+    /\bmy\b|\bmine\b/g,
+    `<@${message.author.id}>'s`
+  );
+  // Taking all the words.
+  const messageSplit = message.content.split(/\s+/);
   // We need to know what type of reminder it is.
   let remindType, remindPerson;
   // We need to check if a user was specified who should be reminded.
-  if (messageSplit[1] == "me") {
-    remindType = messageSplit[2];
-    remindPerson = message.author.id;
-  } else if (messageSplit[1].startsWith("<@")) {
-    remindPerson = messageSplit[1].substring(2, messageSplit[1].length - 1);
-    remindType = messageSplit[2];
+  if (messageSplit[1].startsWith("<@")) {
+    const lastCharIndex = messageSplit[1].length - 1;
+    // A proper ID should be of the format <@number>. These 2 ifs are to make sure proper ID was provided.
+    if (messageSplit[1][lastCharIndex] == ">") {
+      remindPerson = messageSplit[1].substring(2, lastCharIndex);
+      remindType = messageSplit[2];
+    }
   }
   // If none was specified, the sender should be reminded.
   else {
