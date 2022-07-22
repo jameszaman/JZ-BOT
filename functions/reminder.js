@@ -84,6 +84,10 @@ function setReminder(message, client) {
     /\bmy\b|\bmine\b/g,
     `<@${message.author.id}>'s`
   );
+  message.content = message.content.replace(
+    /\bI\b/g,
+    `You`
+  );
   // Taking all the words.
   const messageSplit = message.content.split(/\s+/);
   // We need to know what type of reminder it is.
@@ -124,10 +128,13 @@ function setReminder(message, client) {
       message.reply("Please give proper reminder message.");
     } else {
       // Get the message and when to remind.
-      const reminderMessage = extractReminderMessage(
+      let reminderMessage = extractReminderMessage(
         messageSplit,
         lastTimeIndex
       );
+      if(!reminderMessage) {
+        reminderMessage = 'You are being reminded about.... ***something***. Unfortunately, you never told me what.'
+      }
       // Basically when the reminder should be sent. It is in miliseconds.
       const reminderTime = getNewTime(extraTime) - new Date();
 
