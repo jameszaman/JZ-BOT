@@ -74,6 +74,9 @@ function extractReminderMessage(fullString, lastTimeIndex) {
 }
 
 function setReminder(message, client) {
+  // The message that will be sent.
+  let reminderMessage;
+
   // If me/my/myself/mine is used in the message, we would assume that they
   // Are talking about the author of the message.
   message.content = message.content.replace(
@@ -107,6 +110,21 @@ function setReminder(message, client) {
     remindPerson = message.author.id;
   }
 
+  // In case they say the message after the time.
+  if(remindType == 'to') {
+    reminderMessage = '';
+    for(let i = 3; i < messageSplit.length; ++i) {
+      if(messageSplit[i] == 'after' || messageSplit[i] == 'at' || messageSplit[i] == 'every') {
+        // This is the proper remind type.
+        remindType = messageSplit[i];
+        break;
+      }
+      else {
+        reminderMessage += messageSplit[i] + ' ';
+      }
+    }
+  }
+
   if (remindType === "after") {
     extraTime = {};
     let lastTimeIndex = -1;
@@ -128,12 +146,16 @@ function setReminder(message, client) {
       message.reply("Please give proper reminder message.");
     } else {
       // Get the message and when to remind.
-      let reminderMessage = extractReminderMessage(
-        messageSplit,
-        lastTimeIndex
-      );
+      // We should try to extract the reminder message in case we have not already done that.
       if(!reminderMessage) {
-        reminderMessage = 'You are being reminded about.... ***something***. Unfortunately, you never told me what.'
+        reminderMessage = extractReminderMessage(
+          messageSplit,
+          lastTimeIndex
+        );
+        // In case no reminder message was found.
+        if(!reminderMessage) {
+          reminderMessage = 'You are being reminded about.... ***something***. Unfortunately, you never told me what.'
+        }
       }
       // Basically when the reminder should be sent. It is in miliseconds.
       const reminderTime = getNewTime(extraTime) - new Date();
