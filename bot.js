@@ -3,7 +3,7 @@ require("dotenv").config();
 const Discord = require("discord.js");
 
 // User defined imports.
-const { setReminder } = require("./functions/reminder.js");
+const { setReminder } = require("./functions/reminder");
 const { sendDocumentation } = require("./functions/documentation");
 const { ban, kick } = require("./functions/moderator");
 const {
