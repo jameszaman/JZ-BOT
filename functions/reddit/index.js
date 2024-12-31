@@ -5,7 +5,7 @@ require("dotenv").config();
 const { MessageEmbed } = require("discord.js");
 
 // User defined modules.
-const Reddit = require("../database/redditModel");
+const Reddit = require("../../database/redditModel");
 
 async function updateRedditPosts(client) {
   // Get information about all the subreddits of every discord channel.
