@@ -59,9 +59,9 @@ client.on("message", async (message) => {
 // Schedules job for the bot to do.
 
 // This one will work every minute.
-setInterval(() => {
-  updateRedditPosts(client);
-}, process.env.BOT_CALL_TIME);
+// setInterval(() => {
+//   updateRedditPosts(client);
+// }, process.env.BOT_CALL_TIME);
 
 // Exporting the starting function to use in another file.
 module.exports = () => client.login(process.env.DISCORD_BOT_TOKEN);
