@@ -14,7 +14,7 @@ const timeWords = {
 
 // *** Misc Functions ***.
 
-// This funnction takes an object which lets it know much time to add.
+// This function takes an object which lets it know much time to add.
 // It adds those times to current time and returns a new Date();
 // Object keys are year, month, day, hour, minute, second. Zero to all keys are accepted.
 function getNewTime(extraTime) {
@@ -27,7 +27,7 @@ function getNewTime(extraTime) {
     minute = 0,
     second = 0;
 
-  // Adding extra time to appropiate variables.
+  // Adding extra time to appropriate variables.
   if (extraTime.year) {
     year = extraTime.year;
   }
@@ -114,7 +114,7 @@ function setReminder(message, client) {
   if(remindType == 'to') {
     reminderMessage = '';
     for(let i = 3; i < messageSplit.length; ++i) {
-      if(messageSplit[i] == 'after' || messageSplit[i] == 'at' || messageSplit[i] == 'every') {
+      if(['in', 'after', 'at', 'every'].includes(messageSplit[i])) {
         // This is the proper remind type.
         remindType = messageSplit[i];
         break;
@@ -125,7 +125,7 @@ function setReminder(message, client) {
     }
   }
 
-  if (remindType === "after") {
+  if (remindType === "after" || remindType === "in") {
     extraTime = {};
     let lastTimeIndex = -1;
     for (word in timeWords) {
@@ -157,7 +157,7 @@ function setReminder(message, client) {
           reminderMessage = 'You are being reminded about.... ***something***. Unfortunately, you never told me what.'
         }
       }
-      // Basically when the reminder should be sent. It is in miliseconds.
+      // Basically when the reminder should be sent. It is in milliseconds.
       const reminderTime = getNewTime(extraTime) - new Date();
 
       // We use a timeout to send the user the reminder
