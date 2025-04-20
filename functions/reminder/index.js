@@ -100,7 +100,7 @@ function extractReminderMessage(fullString, lastTimeIndex) {
   return 'You are being reminded about.... ***something***. Unfortunately, you never told me what.'
 }
 
-function sendMessage(message, remindPerson, reminderMessage, reminderTime) {
+function sendMessage(message, remindPerson, reminderMessage, reminderTime, client) {
   setTimeout(() => {
     if(remindPerson == 'everyone') {
       message.channel.send(`@everyone ${reminderMessage}`);
@@ -198,7 +198,7 @@ function setReminder(message, client) {
 
     // We use a timeout to send the user the reminder
     // After the given time.
-    sendMessage(message, remindPerson, reminderMessage, reminderTime);
+    sendMessage(message, remindPerson, reminderMessage, reminderTime, client);
 
     message.reply("Your reminder has been added!");
   } else if (remindType === "at") {
@@ -243,7 +243,7 @@ function setReminder(message, client) {
 
       // We use a timeout to send the user the reminder
       // After the given time.
-      sendMessage(message, remindPerson, reminderMessage, reminderTime);
+      sendMessage(message, remindPerson, reminderMessage, reminderTime, client);
     }
     message.reply("Your reminder has been added!");
   } else {
