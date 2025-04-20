@@ -100,6 +100,21 @@ function extractReminderMessage(fullString, lastTimeIndex) {
   return 'You are being reminded about.... ***something***. Unfortunately, you never told me what.'
 }
 
+function sendMessage(message, remindPerson, reminderMessage, reminderTime) {
+  setTimeout(() => {
+    if(remindPerson == 'everyone') {
+      message.channel.send(`@everyone ${reminderMessage}`);
+    }
+    else if(remindPerson == 'none') {
+      message.channel.send(reminderMessage);
+      return;
+    }
+    else {
+      client.users.cache.get(remindPerson).send(reminderMessage);
+    }
+  }, reminderTime);
+}
+
 function setReminder(message, client) {
   // The message that will be sent.
   let reminderMessage;
@@ -131,6 +146,16 @@ function setReminder(message, client) {
       remindType = messageSplit[2];
     }
   }
+  else if(messageSplit[1] == "here") {
+    // If no person was set, we will be messaging everyone in the channel.
+    remindType = messageSplit[2]; // Starts from index 1 was none was specified.
+
+    remindPerson = 'none';
+  }
+  else if(messageSplit[1] == "everyone") {
+    remindType = messageSplit[2]; // Starts from index 1 was none was specified.
+    remindPerson = 'everyone';
+  }
   // If none was specified, the sender should be reminded.
   else {
     remindType = messageSplit[1]; // Starts from index 1 was none was specified.
@@ -153,7 +178,7 @@ function setReminder(message, client) {
   }
 
   if(['after', 'in'].includes(remindType)) {
-    const [extraTime, lastTimeIndex] = timeToAdd(messageSplit);
+    const {extraTime, lastTimeIndex} = timeToAdd(messageSplit);
 
     if(lastTimeIndex == -1) {
       message.reply("Please give a proper time.");
@@ -173,9 +198,8 @@ function setReminder(message, client) {
 
     // We use a timeout to send the user the reminder
     // After the given time.
-    setTimeout(() => {
-      client.users.cache.get(remindPerson).send(reminderMessage);
-    }, reminderTime);
+    sendMessage(message, remindPerson, reminderMessage, reminderTime);
+
     message.reply("Your reminder has been added!");
   } else if (remindType === "at") {
     message.reply("Not Implemented yet");
@@ -219,9 +243,7 @@ function setReminder(message, client) {
 
       // We use a timeout to send the user the reminder
       // After the given time.
-      setTimeout(() => {
-        client.users.cache.get(remindPerson).send(reminderMessage);
-      }, reminderTime);
+      sendMessage(message, remindPerson, reminderMessage, reminderTime);
     }
     message.reply("Your reminder has been added!");
   } else {
