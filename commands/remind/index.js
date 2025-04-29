@@ -32,7 +32,7 @@ function timeToAdd(messageSplit) {
     }
   }
 
-  return {extraTime, lastTimeIndex};
+  return { extraTime, lastTimeIndex };
 }
 
 // This function takes an object which lets it know much time to add.
@@ -93,27 +93,44 @@ function extractReminderMessage(fullString, lastTimeIndex) {
     message = message.substring(1, message.length);
   }
 
-  if(message) {
+  if (message) {
     return message;
   }
   // In case no reminder message was found.
-  return 'You are being reminded about.... ***something***. Unfortunately, you never told me what.'
+  return "You are being reminded about.... ***something***. Unfortunately, you never told me what.";
 }
 
-function scheduleMessage(message, remindPerson, reminderMessage, reminderTime, client) {
+function scheduleMessage(
+  message,
+  remindPerson,
+  reminderMessage,
+  reminderTime,
+  client,
+  repeat = 1
+) {
   const timeoutID = setTimeout(() => {
-    if(remindPerson == 'everyone') {
+    if (remindPerson == "everyone") {
       message.channel.send(`@everyone ${reminderMessage}`);
-    }
-    else if(remindPerson == 'none') {
+    } else if (remindPerson == "none") {
       message.channel.send(reminderMessage);
-      return;
-    }
-    else {
+    } else {
       client.users.cache.get(remindPerson).send(reminderMessage);
     }
+
+    repeat -= 1;
+
+    if (repeat) {
+      scheduleMessage(
+        message,
+        remindPerson,
+        reminderMessage,
+        reminderTime,
+        client,
+        repeat
+      );
+    }
   }, reminderTime);
-  
+
   return timeoutID;
 }
 
@@ -131,10 +148,7 @@ module.exports = (message, client) => {
     /\bmy\b|\bmine\b/g,
     `<@${message.author.id}>'s`
   );
-  message.content = message.content.replace(
-    /\bI\b/g,
-    `You`
-  );
+  message.content = message.content.replace(/\bI\b/g, `You`);
   // Taking all the words.
   const messageSplit = message.content.split(/\s+/);
   // We need to know what type of reminder it is.
@@ -147,16 +161,14 @@ module.exports = (message, client) => {
       remindPerson = messageSplit[1].substring(2, lastCharIndex);
       remindType = messageSplit[2];
     }
-  }
-  else if(messageSplit[1] == "here") {
+  } else if (messageSplit[1] == "here") {
     // If no person was set, we will be messaging everyone in the channel.
     remindType = messageSplit[2]; // Starts from index 1 was none was specified.
 
-    remindPerson = 'none';
-  }
-  else if(messageSplit[1] == "everyone") {
+    remindPerson = "none";
+  } else if (messageSplit[1] == "everyone") {
     remindType = messageSplit[2]; // Starts from index 1 was none was specified.
-    remindPerson = 'everyone';
+    remindPerson = "everyone";
   }
   // If none was specified, the sender should be reminded.
   else {
@@ -165,50 +177,52 @@ module.exports = (message, client) => {
   }
 
   // In case they say the message after the time.
-  if(remindType == 'to') {
-    reminderMessage = '';
-    for(let i = 3; i < messageSplit.length; ++i) {
-      if(['in', 'after', 'at', 'every'].includes(messageSplit[i])) {
+  if (remindType == "to") {
+    reminderMessage = "";
+    for (let i = 3; i < messageSplit.length; ++i) {
+      if (["in", "after", "at", "every"].includes(messageSplit[i])) {
         // This is the proper remind type.
         remindType = messageSplit[i];
         break;
-      }
-      else {
-        reminderMessage += messageSplit[i] + ' ';
+      } else {
+        reminderMessage += messageSplit[i] + " ";
       }
     }
   }
 
-  if(['after', 'in'].includes(remindType)) {
-    const {extraTime, lastTimeIndex} = timeToAdd(messageSplit);
+  if (["after", "in"].includes(remindType)) {
+    const { extraTime, lastTimeIndex } = timeToAdd(messageSplit);
 
-    if(lastTimeIndex == -1) {
+    if (lastTimeIndex == -1) {
       message.reply("Please give a proper time.");
       return;
     }
-  
+
     // Get the message and when to remind.
     // We should try to extract the reminder message in case we have not already done that.
-    if(!reminderMessage) {
-      reminderMessage = extractReminderMessage(
-        messageSplit,
-        lastTimeIndex
-      );
+    if (!reminderMessage) {
+      reminderMessage = extractReminderMessage(messageSplit, lastTimeIndex);
     }
     // Basically when the reminder should be sent. It is in milliseconds.
     const reminderTime = getNewTime(extraTime) - new Date();
 
     // We use a timeout to send the user the reminder
     // After the given time.
-    scheduleMessage(message, remindPerson, reminderMessage, reminderTime, client);
+    scheduleMessage(
+      message,
+      remindPerson,
+      reminderMessage,
+      reminderTime,
+      client
+    );
 
     message.reply("Your reminder has been added!");
   } else if (remindType === "at") {
     message.reply("Not Implemented yet");
   } else if (remindType === "every") {
-    const {extraTime, lastTimeIndex} = timeToAdd(messageSplit);
-    
-    if(lastTimeIndex == -1) {
+    const { extraTime, lastTimeIndex } = timeToAdd(messageSplit);
+
+    if (lastTimeIndex == -1) {
       message.reply("Please give a proper time.");
       return;
     }
@@ -218,37 +232,40 @@ module.exports = (message, client) => {
     // That is why we are checking values relative to the last time index.
     const repeatCount = Number(messageSplit[lastTimeIndex + 1]);
 
-    if(isNaN(repeatCount)) {
+    if (isNaN(repeatCount)) {
       message.reply("Please give a proper repeat count.");
       return;
     }
-    
+
     // Remove the repeat count from the message.
-    if (["time", "times"].includes(messageSplit[lastTimeIndex + 2])) {   
+    if (["time", "times"].includes(messageSplit[lastTimeIndex + 2])) {
       messageSplit.splice(lastTimeIndex + 1, 2);
-    }
-    else {
+    } else {
       messageSplit.splice(lastTimeIndex + 1, 1);
     }
 
     // Get the message and when to remind.
     // We should try to extract the reminder message in case we have not already done that.
-    if(!reminderMessage) {
-      reminderMessage = extractReminderMessage(
-        messageSplit,
-        lastTimeIndex
-      );
+    if (!reminderMessage) {
+      reminderMessage = extractReminderMessage(messageSplit, lastTimeIndex);
     }
-    for(let i = 1; i <= repeatCount; ++i) {
-      // Basically when the reminder should be sent. It is in milliseconds.
-      const reminderTime = getNewTime(extraTime, i) - new Date();
 
-      // We use a timeout to send the user the reminder
-      // After the given time.
-      scheduleMessage(message, remindPerson, reminderMessage, reminderTime, client);
-    }
+    // Basically when the reminder should be sent. It is in milliseconds.
+    const reminderTime = getNewTime(extraTime) - new Date();
+
+    // We use a timeout to send the user the reminder
+    // After the given time.
+    scheduleMessage(
+      message,
+      remindPerson,
+      reminderMessage,
+      reminderTime,
+      client,
+      repeatCount
+    );
+
     message.reply("Your reminder has been added!");
   } else {
     message.reply("Please give proper reminder type. [after, at, every]");
   }
-}
+};
