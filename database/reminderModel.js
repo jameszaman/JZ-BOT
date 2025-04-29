@@ -1,16 +1,14 @@
 const { Schema, Model } = require("./database");
 
 // Creating Schemas.
-const reminderSchema = Schema({
-  message: {
-    String,
-  },
-  time: {
-    type: Date,
-  },
-  user_id: {
-    type: String,
-  },
+const reminderSchema = new Schema({
+  user_id: { type: String, required: true },
+  message: { type: String, required: true },
+  time: { type: Date, required: true },
+  repeat: { type: Number, default: 1 },
 });
 
-module.exports.Reminder = Model("reminder", reminderSchema);
+// Setting TTL, so the reminder is auto deleted after reminder is sent.
+reminderSchema.index({time: 1}, { expireAfterSeconds: 0 });
+
+module.exports = Model("reminder", reminderSchema);

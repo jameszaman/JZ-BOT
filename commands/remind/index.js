@@ -1,4 +1,4 @@
-const { Reminder } = "../database/database.js";
+const Reminder = require("../../database/reminderModel");
 
 // *** Some necessary variables ***
 
@@ -100,6 +100,23 @@ function extractReminderMessage(fullString, lastTimeIndex) {
   return "You are being reminded about.... ***something***. Unfortunately, you never told me what.";
 }
 
+function saveReminderDB(user_id, message, time, repeat) {
+  // Saving the reminder to the database.
+  try {
+    const reminder = new Reminder({
+      user_id: user_id,
+      message: message,
+      time: time,
+      repeat: repeat,
+    });
+  
+    reminder.save();
+  }
+  catch(err) {
+    console.error("Error saving reminder to database:\n", err);
+  }
+}
+
 function scheduleMessage(
   message,
   remindPerson,
@@ -108,17 +125,29 @@ function scheduleMessage(
   client,
   repeat = 1
 ) {
+  // We might need to retrieve the reminder in the future.
+  // For example if the app crashes or the time is so large that timeout cannot immediately be set.
+  saveReminderDB(
+    remindPerson,
+    reminderMessage,
+    new Date(Date.now() + reminderTime),
+    repeat
+  );
+
   const timeoutID = setTimeout(() => {
     if (remindPerson == "everyone") {
+      // Adding @everyone if we were told to remind everyone.
       message.channel.send(`@everyone ${reminderMessage}`);
     } else if (remindPerson == "none") {
+      // If no person is found, just send it back to the channel.
       message.channel.send(reminderMessage);
     } else {
+      // Otherwise send to the person mentioned.
       client.users.cache.get(remindPerson).send(reminderMessage);
     }
 
+    // Repeat the reminder as many time as the user wanted.
     repeat -= 1;
-
     if (repeat) {
       scheduleMessage(
         message,
