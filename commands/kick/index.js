@@ -1,17 +1,6 @@
-async function ban(message, args) {
-  if (!message.member.hasPermission("BAN_MEMBERS")) {
-    return message.reply("You do not have permission to use that command");
-  }
-  if (args.length === 0) return message.reply("Please provide an ID");
+// ! Untested in the new folder structure as we are not supporting this yet.
 
-  try {
-    const user = await message.guild.members.ban(args[0]);
-  } catch (err) {
-    console.error("There was some error while banning!");
-  }
-}
-
-function kick(message, args) {
+module.exports = function kick(message, args) {
   // Making sure that the user has permission to do this.
   if (!message.member.hasPermission("KICK_MEMBERS")) {
     return message.reply("You do not have permission to use that command");
@@ -33,4 +22,4 @@ function kick(message, args) {
   } else {
     message.channel.send("That member was not found");
   }
-}
+};

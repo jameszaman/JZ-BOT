@@ -1,3 +1,7 @@
+// ! Not working on the new folder structure.
+// ! In the new structure each command is a folder, whereas this file contains
+// ! 4 commands. Not supporting this for now.
+
 // Imports
 const { spawnSync } = require("child_process");
 const axios = require("axios");

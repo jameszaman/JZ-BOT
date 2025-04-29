@@ -1,5 +1,5 @@
 // Imports
-const bot = require('./bot.js');
+const bot = require('./bot/bot.js');
 const express = require('express');
 
 // Declaring Objects.

@@ -1,4 +1,13 @@
+# Node specific
 node_modules/
 .env
 package-lock.json
+
+# Test/Output related
 test/
+coverage/
+*.test.js
+
+# IDE Specific
+.vscode/
+.idea/
