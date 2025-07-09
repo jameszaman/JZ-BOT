@@ -2,8 +2,9 @@ const { Schema, Model } = require("./database");
 
 // Creating Schemas.
 const reminderSchema = new Schema({
+  channel_id: { type: String, required: true },
   user_id: { type: String, required: true },
-  message: { type: String, required: true },
+  reminderMessage: { type: String, required: true },
   time: { type: Date, required: true },
   repeat: { type: Number, default: 1 },
 });

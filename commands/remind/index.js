@@ -12,6 +12,29 @@ const timeWords = {
   second: ["second", "seconds", "sec", "secs"],
 };
 
+
+// In case app restarts we might be missing some reminders. Also if the reminder time
+// Is too large (24.8 days or more) we cannot process them right away. For this reason
+// At the start, and every 24 hours, we will load any remaining reminders from the database.
+setTimeout(() => {
+  // Get all reminders of the next 24 hours.
+  allReminders = Reminder.find({time: {$gt: new Date(Date.now() - 24 * 60 * 60 * 1000)}});
+  allReminders.then((reminders) => {
+    for (reminder of reminders) {
+      const reminderTime = new Date(reminder.time) - new Date();
+      scheduleMessage(
+        message.channel,
+        reminder.user_id,
+        reminder.reminderMessage,
+        reminderTime,
+        client,
+        reminder.repeat
+      );
+    }
+  }
+  );
+}, 5000);
+
 // *** Misc Functions ***.
 
 function timeToAdd(messageSplit) {
@@ -100,25 +123,25 @@ function extractReminderMessage(fullString, lastTimeIndex) {
   return "You are being reminded about.... ***something***. Unfortunately, you never told me what.";
 }
 
-function saveReminderDB(user_id, message, time, repeat) {
+function saveReminderDB(channel_id, user_id, reminderMessage, time, repeat) {
   // Saving the reminder to the database.
   try {
     const reminder = new Reminder({
+      channel_id: channel_id,
       user_id: user_id,
-      message: message,
+      reminderMessage: reminderMessage,
       time: time,
       repeat: repeat,
     });
-  
+
     reminder.save();
-  }
-  catch(err) {
+  } catch (err) {
     console.error("Error saving reminder to database:\n", err);
   }
 }
 
 function scheduleMessage(
-  message,
+  channel,
   remindPerson,
   reminderMessage,
   reminderTime,
@@ -128,6 +151,7 @@ function scheduleMessage(
   // We might need to retrieve the reminder in the future.
   // For example if the app crashes or the time is so large that timeout cannot immediately be set.
   saveReminderDB(
+    channel.id,
     remindPerson,
     reminderMessage,
     new Date(Date.now() + reminderTime),
@@ -137,10 +161,10 @@ function scheduleMessage(
   const timeoutID = setTimeout(() => {
     if (remindPerson == "everyone") {
       // Adding @everyone if we were told to remind everyone.
-      message.channel.send(`@everyone ${reminderMessage}`);
+      channel.send(`@everyone ${reminderMessage}`);
     } else if (remindPerson == "none") {
       // If no person is found, just send it back to the channel.
-      message.channel.send(reminderMessage);
+      channel.send(reminderMessage);
     } else {
       // Otherwise send to the person mentioned.
       client.users.cache.get(remindPerson).send(reminderMessage);
@@ -150,7 +174,7 @@ function scheduleMessage(
     repeat -= 1;
     if (repeat) {
       scheduleMessage(
-        message,
+        channel,
         remindPerson,
         reminderMessage,
         reminderTime,
@@ -238,7 +262,7 @@ module.exports = (message, client) => {
     // We use a timeout to send the user the reminder
     // After the given time.
     scheduleMessage(
-      message,
+      message.channel,
       remindPerson,
       reminderMessage,
       reminderTime,
@@ -285,7 +309,7 @@ module.exports = (message, client) => {
     // We use a timeout to send the user the reminder
     // After the given time.
     scheduleMessage(
-      message,
+      message.channel,
       remindPerson,
       reminderMessage,
       reminderTime,
