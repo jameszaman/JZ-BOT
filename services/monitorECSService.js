@@ -210,8 +210,15 @@ async function sendToDiscord({ embed, pingEveryone = false }) {
       parse: pingEveryone ? ['everyone'] : [],
     },
   };
+
   if (pingEveryone) payload.content = '@everyone';
-  await axios.post(DISCORD_WEBHOOK_URL, payload);
+
+  try{
+    await axios.post(DISCORD_WEBHOOK_URL, payload);
+  }
+  catch (err) {
+    console.error('❌ Failed to send report to Discord:', err.message);
+  }
 }
 
 // —————————————————————————————————————————————————————————————
@@ -245,7 +252,7 @@ async function monitor() {
       if (successCount < Number(SUCCESS_CALL_THRESHOLD)) {
         return; // skip sending until threshold reached
       }
-      successCount = 0;
+      successCount = 0;   
     } else {
       successCount = 0; // reset on failure
     }
@@ -267,7 +274,7 @@ async function monitor() {
     await sendToDiscord({ embed, pingEveryone });
     console.log('✅ Report sent to Discord');
   } catch (err) {
-    console.error('❌ Error monitoring ECS service:', err);
+    console.error('❌ Error Happened: ', err.message);
   }
 }
 

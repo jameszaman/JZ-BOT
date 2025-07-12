@@ -13,27 +13,28 @@ const timeWords = {
 };
 
 
-// In case app restarts we might be missing some reminders. Also if the reminder time
-// Is too large (24.8 days or more) we cannot process them right away. For this reason
-// At the start, and every 24 hours, we will load any remaining reminders from the database.
-setTimeout(() => {
-  // Get all reminders of the next 24 hours.
-  allReminders = Reminder.find({time: {$gt: new Date(Date.now() - 24 * 60 * 60 * 1000)}});
-  allReminders.then((reminders) => {
-    for (reminder of reminders) {
-      const reminderTime = new Date(reminder.time) - new Date();
-      scheduleMessage(
-        message.channel,
-        reminder.user_id,
-        reminder.reminderMessage,
-        reminderTime,
-        client,
-        reminder.repeat
-      );
-    }
-  }
-  );
-}, 5000);
+// This part is not working!
+// // In case app restarts we might be missing some reminders. Also if the reminder time
+// // Is too large (24.8 days or more) we cannot process them right away. For this reason
+// // At the start, and every 24 hours, we will load any remaining reminders from the database.
+// setTimeout(() => {
+//   // Get all reminders of the next 24 hours.
+//   allReminders = Reminder.find({time: {$gt: new Date(Date.now() - 24 * 60 * 60 * 1000)}});
+//   allReminders.then((reminders) => {
+//     for (reminder of reminders) {
+//       const reminderTime = new Date(reminder.time) - new Date();
+//       scheduleMessage(
+//         message.channel,
+//         reminder.user_id,
+//         reminder.reminderMessage,
+//         reminderTime,
+//         client,
+//         reminder.repeat
+//       );
+//     }
+//   }
+//   );
+// }, 5000);
 
 // *** Misc Functions ***.
 
