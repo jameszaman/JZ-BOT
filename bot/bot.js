@@ -1,11 +1,21 @@
 // imports
 require("dotenv").config();
-const Discord = require("discord.js");
+const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const path = require("path");
 const fs = require("fs");
 const { aggregate } = require("../database/mongodb.js");
 // Declaring objects.
-const client = new Discord.Client();
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,            // for guild-related events
+    GatewayIntentBits.GuildMessages,     // for message events in guilds
+    GatewayIntentBits.MessageContent     // to read the content of messages
+  ],
+  partials: [
+    Partials.Channel,                    // if you ever want to reply in DMs or uncached channels
+    Partials.Message                     // if you want to listen for reactions or edits to old messages
+  ]
+});
 
 // Variable declarations.
 const PREFIX = "!";
@@ -19,7 +29,7 @@ commandFolders.forEach(
     (commands[command] = require(path.join(__dirname, "../commands", command)))
 );
 
-client.on("message", async (message) => {
+client.on("messageCreate", async (message) => {
   // Ignore messages from bots
   if (message.author.bot) {
     if (message.channel.id == "1394262761206317099") {
@@ -48,7 +58,7 @@ client.on("message", async (message) => {
               .toISOString()
               .substr(11, 8);
 
-            const shouldMentionAll = elapsedMs > 24 * 60 * 60 * 1000;
+            const shouldMentionAll = elapsedMs < 24 * 60 * 60 * 1000;
 
             // Build your message prefix and allowedMentions accordingly
             const prefix = shouldMentionAll ? "@everyone " : "";
