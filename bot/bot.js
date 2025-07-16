@@ -20,9 +20,9 @@ commandFolders.forEach(
 );
 
 client.on("message", async (message) => {
-  // Ignore messages from bots 
+  // Ignore messages from bots
   if (message.author.bot) {
-    if(message.channel.id == "1394262761206317099") {
+    if (message.channel.id == "1394262761206317099") {
       if (message.content.includes(`"message": "User logged in",`)) {
         const jsonMessage = JSON.parse(message.content);
         const uniqueBrowserID = jsonMessage.unique_browser_id;
@@ -30,23 +30,48 @@ client.on("message", async (message) => {
         const currentTime = new Date();
 
         const pipeline = [
-          { $match: { unique_browser_id: uniqueBrowserID, is_authenticated: true, timestamp: {$lte: currentTime} } },
+          {
+            $match: {
+              unique_browser_id: uniqueBrowserID,
+              is_authenticated: true,
+              timestamp: { $lte: currentTime },
+            },
+          },
           { $sort: { timestamp: -1 } },
-          { $limit: 1 }
-        ]
+          { $limit: 1 },
+        ];
 
         aggregate("Tracking", "CORE_PROP_CLOUD_LOGS", pipeline)
-        .then((result) => {
-          console.log(result);
-          // Check if time difference from currentTime is less than 24 hours
-          if(currentTime - result[0].timestamp < 24 * 60 * 60 * 1000) {
-            // reply to the message with error.
-            message.reply(`@everyone User with unique browser ID \`${uniqueBrowserID}\` has logged out within the last 24 hours.`);
-          }
-        })
-        .catch((err) => {
-          console.error("Error aggregating data:", err);
-        });
+          .then((result) => {
+            const elapsedMs = Date.now() - result[0].timestamp;
+            const formattedHMS = new Date(elapsedMs)
+              .toISOString()
+              .substr(11, 8);
+
+            const shouldMentionAll = elapsedMs > 24 * 60 * 60 * 1000;
+
+            // Build your message prefix and allowedMentions accordingly
+            const prefix = shouldMentionAll ? "@everyone " : "";
+            const allowedMentions = {
+              parse: shouldMentionAll ? ["everyone"] : [],
+              repliedUser: false,
+            };
+
+            const content = `${prefix}Browser ID: \`${uniqueBrowserID}\` | Inactivity Time: \`${formattedHMS}\` .`;
+
+            message.channel.send({
+              content,
+              allowedMentions,
+              messageReference: {
+                messageID: message.id,
+                channelID: message.channel.id,
+                guildID: message.guild.id,
+              },
+            });
+          })
+          .catch((err) => {
+            console.error("Error aggregating data:", err);
+          });
       }
     }
   }
@@ -59,8 +84,7 @@ client.on("message", async (message) => {
 
     try {
       commands[CMD_NAME](message, client);
-    }
-    catch (err) {
+    } catch (err) {
       message.reply(
         `Command \`${CMD_NAME}\` does not exist. Allowed commands are: \`${Object.keys(
           commands
