@@ -101,7 +101,7 @@ async function checkApiHealth(thresholdMs = 1000, maxAttempts = 3) {
     const start = Date.now();
     try {
       const res = await axios.get(SERVICE_API_URL, {
-        headers: { Cookie: currentCookie },
+        headers: { Cookie: currentCookie,  "X-MyApp-Client": "core-propcloud" },
         maxRedirects: 0,
         validateStatus: s => s < 500,
       });

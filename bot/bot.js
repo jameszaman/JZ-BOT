@@ -3,7 +3,7 @@ require("dotenv").config();
 const Discord = require("discord.js");
 const path = require("path");
 const fs = require("fs");
-
+const { aggregate } = require("../database/mongodb.js");
 // Declaring objects.
 const client = new Discord.Client();
 
@@ -20,8 +20,37 @@ commandFolders.forEach(
 );
 
 client.on("message", async (message) => {
-  // DO nothing if the message is from the bot.
-  if (message.author.bot) return;
+  // Ignore messages from bots 
+  if (message.author.bot) {
+    if(message.channel.id == "1394262761206317099") {
+      if (message.content.includes(`"message": "User logged in",`)) {
+        const jsonMessage = JSON.parse(message.content);
+        const uniqueBrowserID = jsonMessage.unique_browser_id;
+
+        const currentTime = new Date();
+
+        const pipeline = [
+          { $match: { unique_browser_id: uniqueBrowserID, is_authenticated: true, timestamp: {$lte: currentTime} } },
+          { $sort: { timestamp: -1 } },
+          { $limit: 1 }
+        ]
+
+        aggregate("Tracking", "CORE_PROP_CLOUD_LOGS", pipeline)
+        .then((result) => {
+          console.log(result);
+          // Check if time difference from currentTime is less than 24 hours
+          if(currentTime - result[0].timestamp < 24 * 60 * 60 * 1000) {
+            // reply to the message with error.
+            message.reply(`@everyone User with unique browser ID \`${uniqueBrowserID}\` has logged out within the last 24 hours.`);
+          }
+        })
+        .catch((err) => {
+          console.error("Error aggregating data:", err);
+        });
+      }
+    }
+  }
+
   if (message.content.startsWith(PREFIX)) {
     const [CMD_NAME, ...args] = message.content
       .trim()
