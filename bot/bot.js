@@ -1,20 +1,20 @@
 // imports
 require("dotenv").config();
-const { Client, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, Partials } = require("discord.js");
 const path = require("path");
 const fs = require("fs");
 const { aggregate } = require("../database/mongodb.js");
 // Declaring objects.
 const client = new Client({
   intents: [
-    GatewayIntentBits.Guilds,            // for guild-related events
-    GatewayIntentBits.GuildMessages,     // for message events in guilds
-    GatewayIntentBits.MessageContent     // to read the content of messages
+    GatewayIntentBits.Guilds, // for guild-related events
+    GatewayIntentBits.GuildMessages, // for message events in guilds
+    GatewayIntentBits.MessageContent, // to read the content of messages
   ],
   partials: [
-    Partials.Channel,                    // if you ever want to reply in DMs or uncached channels
-    Partials.Message                     // if you want to listen for reactions or edits to old messages
-  ]
+    Partials.Channel, // if you ever want to reply in DMs or uncached channels
+    Partials.Message, // if you want to listen for reactions or edits to old messages
+  ],
 });
 
 // Variable declarations.
@@ -54,9 +54,19 @@ client.on("messageCreate", async (message) => {
         aggregate("Tracking", "CORE_PROP_CLOUD_LOGS", pipeline)
           .then((result) => {
             const elapsedMs = Date.now() - result[0].timestamp;
-            const formattedHMS = new Date(elapsedMs)
-              .toISOString()
-              .substr(11, 8);
+
+            const totalSeconds = Math.floor(elapsedMs / 1000);
+            const days = Math.floor(totalSeconds / (3600 * 24));
+            const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            const formattedDHMS = [
+              String(days).padStart(2, "0"),
+              String(hours).padStart(2, "0"),
+              String(minutes).padStart(2, "0"),
+              String(seconds).padStart(2, "0"),
+            ].join(":");
 
             const shouldMentionAll = elapsedMs < 24 * 60 * 60 * 1000;
 
@@ -67,7 +77,7 @@ client.on("messageCreate", async (message) => {
               repliedUser: false,
             };
 
-            const content = `${prefix}Browser ID: \`${uniqueBrowserID}\` | Inactivity Time: \`${formattedHMS}\` .`;
+            const content = `${prefix}Browser ID: \`${uniqueBrowserID}\` | Inactivity Time: \`${formattedDHMS}\` .`;
 
             message.channel.send({
               content,
