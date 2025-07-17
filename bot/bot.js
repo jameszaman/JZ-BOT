@@ -70,23 +70,17 @@ client.on("messageCreate", async (message) => {
 
             const shouldMentionAll = elapsedMs < 24 * 60 * 60 * 1000;
 
-            // Build your message prefix and allowedMentions accordingly
             const prefix = shouldMentionAll ? "@everyone " : "";
             const allowedMentions = {
               parse: shouldMentionAll ? ["everyone"] : [],
-              repliedUser: false,
+              repliedUser: false, // prevents pinging the user you're replying to
             };
 
             const content = `${prefix}Browser ID: \`${uniqueBrowserID}\` | Inactivity Time: \`${formattedDHMS}\` .`;
 
-            message.channel.send({
+            message.reply({
               content,
               allowedMentions,
-              messageReference: {
-                messageID: message.id,
-                channelID: message.channel.id,
-                guildID: message.guild.id,
-              },
             });
           })
           .catch((err) => {
