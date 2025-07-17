@@ -53,35 +53,67 @@ client.on("messageCreate", async (message) => {
 
         aggregate("Tracking", "CORE_PROP_CLOUD_LOGS", pipeline)
           .then((result) => {
-            const elapsedMs = Date.now() - result[0].timestamp;
+            // In case no log is found for the unique browser ID with matching criteria.
+            if (result.length === 0) {
+              console.log("No matching records found for pipeline:", pipeline);
+              return;
+            }
 
-            const totalSeconds = Math.floor(elapsedMs / 1000);
-            const days = Math.floor(totalSeconds / (3600 * 24));
-            const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
+            // Find the document just after this one.
+            const nextPipeline = [
+              {
+                $match: {
+                  unique_browser_id: uniqueBrowserID,
+                  timestamp: { $gt: result[0].timestamp },
+                },
+              },
+              { $sort: { timestamp: 1 } },
+              { $limit: 1 },
+            ];
 
-            const formattedDHMS = [
-              String(days).padStart(2, "0"),
-              String(hours).padStart(2, "0"),
-              String(minutes).padStart(2, "0"),
-              String(seconds).padStart(2, "0"),
-            ].join(":");
+            aggregate("Tracking", "CORE_PROP_CLOUD_LOGS", nextPipeline).then(
+              (nextResult) => {
+                const elapsedMs = nextResult[0].timestamp - result[0].timestamp;
 
-            const shouldMentionAll = elapsedMs < 24 * 60 * 60 * 1000;
+                const totalSeconds = Math.floor(elapsedMs / 1000);
+                const days = Math.floor(totalSeconds / (3600 * 24));
+                const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
 
-            const prefix = shouldMentionAll ? "@everyone " : "";
-            const allowedMentions = {
-              parse: shouldMentionAll ? ["everyone"] : [],
-              repliedUser: false, // prevents pinging the user you're replying to
-            };
+                const formattedDHMS = [
+                  String(days).padStart(2, "0"),
+                  String(hours).padStart(2, "0"),
+                  String(minutes).padStart(2, "0"),
+                  String(seconds).padStart(2, "0"),
+                ].join(":");
 
-            const content = `${prefix}Browser ID: \`${uniqueBrowserID}\` | Inactivity Time: \`${formattedDHMS}\` .`;
+                const shouldMentionAll = elapsedMs < 24 * 60 * 60 * 1000;
 
-            message.reply({
-              content,
-              allowedMentions,
-            });
+                // If the inactivity is less than 24 hours, we to also check if the reason is a manual logout.
+                // If it is, we don't want to mention everyone.
+                let postfix = "";
+                if(shouldMentionAll) {
+                  if (result[0].api == "/logout") {
+                    shouldMentionAll = false;
+                    postfix = " (manual logout)";
+                  }
+                }
+
+                const prefix = shouldMentionAll ? "@everyone " : "";
+                const allowedMentions = {
+                  parse: shouldMentionAll ? ["everyone"] : [],
+                  repliedUser: false, // prevents pinging the user you're replying to
+                };
+
+                const content = `${prefix}Browser ID: \`${uniqueBrowserID}\` | Inactivity Time: \`${formattedDHMS}\` ${postfix}.`;
+
+                message.reply({
+                  content,
+                  allowedMentions,
+                });
+              }
+            );
           })
           .catch((err) => {
             console.error("Error aggregating data:", err);
