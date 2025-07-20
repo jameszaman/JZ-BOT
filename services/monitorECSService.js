@@ -1,7 +1,7 @@
 require('dotenv').config();
 const AWS = require('aws-sdk');
 const axios = require('axios');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder, Colors } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -167,36 +167,38 @@ function createEcsReportEmbed({
   };
 
   const fastEnough = apiHealth.ms <= Number(API_RESPONSE_TIME_LIMIT);
-  return new MessageEmbed()
+  return new EmbedBuilder()
     .setTitle('ECS Service Monitoring Report')
-    .setColor(fastEnough ? 'GREEN' : 'RED')
+    .setColor(fastEnough ? Colors.Green : Colors.Red)
     .setTimestamp()
-    .addField(
-      '🛠️ Service Info',
-      [
-        `• Cluster: \`${clusterName}\``,
-        `• Service: \`${serviceName}\``,
-        `• Running Tasks: \`${tasks.length.toLocaleString()}\``,
-      ].join('\n'),
-      false
+    .addFields(
+      {
+        name: '🛠️ Service Info',
+        value: [
+          `• Cluster: \`${clusterName}\``,
+          `• Service: \`${serviceName}\``,
+          `• Running Tasks: \`${tasks.length.toLocaleString()}\``,
+        ].join('\n'),
+        inline: false,
+      },
+      {
+        name: '📊 Metrics',
+        value: [
+          `• CPU Used: \`${cpu}%\``,
+          `• CPU Reserved: \`${cpuReserved}\``,
+          `• Memory Used: \`${memory} MB\``,
+          `• Storage Read: \`${fmtBytes(storageReadBytes)}\``,
+          `• Storage Write: \`${fmtBytes(storageWriteBytes)}\``,
+        ].join('\n'),
+        inline: false,
+      },
+      {
+        name: '🚦 API Health',
+        value: `${apiHealth.label} — ${apiHealth.ms} ms over ${apiHealth.attempts} attempt${apiHealth.attempts > 1 ? 's' : ''}`,
+        inline: false,
+      }
     )
-    .addField(
-      '📊 Metrics',
-      [
-        `• CPU Used: \`${cpu}%\``,
-        `• CPU Reserved: \`${cpuReserved}\``,
-        `• Memory Used: \`${memory} MB\``,
-        `• Storage Read: \`${fmtBytes(storageReadBytes)}\``,
-        `• Storage Write: \`${fmtBytes(storageWriteBytes)}\``,
-      ].join('\n'),
-      false
-    )
-    .addField(
-      '🚦 API Health',
-      `${apiHealth.label} — ${apiHealth.ms} ms over ${apiHealth.attempts} attempt${apiHealth.attempts > 1 ? 's' : ''}`,
-      false
-    )
-    .setFooter(`Report generated at ${new Date().toISOString()}`);
+    .setFooter({ text: `Report generated at ${new Date().toISOString()}` });
 }
 
 // —————————————————————————————————————————————————————————————

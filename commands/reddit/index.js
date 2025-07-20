@@ -6,7 +6,7 @@
 const { spawnSync } = require("child_process");
 const axios = require("axios");
 require("dotenv").config();
-const { MessageEmbed } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 
 // User defined modules.
 const Reddit = require("../../database/redditModel");
