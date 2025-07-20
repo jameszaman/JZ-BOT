@@ -55,7 +55,7 @@ client.on("messageCreate", async (message) => {
           .then((result) => {
             // In case no log is found for the unique browser ID with matching criteria.
             if (result.length === 0) {
-              console.log("No matching records found for pipeline:", pipeline);
+              console.log("No matching records found for pipeline:\n", JSON.stringify(pipeline, null, 2));
               return;
             }
 
@@ -74,7 +74,7 @@ client.on("messageCreate", async (message) => {
             aggregate("Tracking", "CORE_PROP_CLOUD_LOGS", nextPipeline).then(
               (nextResult) => {
                 if(nextResult.length === 0) {
-                  console.log("No next record found for pipeline:", nextPipeline);
+                  console.log("No next record found for pipeline:\n", JSON.stringify(nextPipeline, null, 2));
                   return;
                 }
 
