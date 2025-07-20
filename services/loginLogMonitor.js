@@ -121,6 +121,13 @@ function checkLoginLogsHelper(message) {
           allowedMentions,
         });
       }
+      else {
+        // If no inactivity time is found, we can log it or handle it accordingly.
+        message.reply({
+          content: `No inactivity time found for Browser ID: \`${uniqueBrowserID}\`.`,
+          allowedMentions: { parse: [] },
+        });
+      }
     })
     .catch((err) => {
       console.error("Error aggregating data:", err);
