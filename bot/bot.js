@@ -73,6 +73,11 @@ client.on("messageCreate", async (message) => {
 
             aggregate("Tracking", "CORE_PROP_CLOUD_LOGS", nextPipeline).then(
               (nextResult) => {
+                if(nextResult.length === 0) {
+                  console.log("No next record found for pipeline:", nextPipeline);
+                  return;
+                }
+
                 const elapsedMs = nextResult[0].timestamp - result[0].timestamp;
 
                 const totalSeconds = Math.floor(elapsedMs / 1000);
