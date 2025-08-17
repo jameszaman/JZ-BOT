@@ -11,3 +11,7 @@ coverage/
 # IDE Specific
 .vscode/
 .idea/
+
+#OS
+.DS_Store
+Thumbs.db

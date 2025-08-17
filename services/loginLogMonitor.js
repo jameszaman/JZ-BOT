@@ -70,6 +70,30 @@ function inactivityTimeCheckPipeline(unique_browser_id) {
   ];
 }
 
+function activeDevicesSummaryPipeline(user_id) {
+  return [
+    {
+      $match: { user_id: user_id }
+    },
+    {
+      $group: {
+        _id: "$unique_browser_id",
+        count: {
+          $sum: 1
+        },
+        user_agent: {$last: "$user_agent"},
+        ip: {$last: "$ip"},
+        timestamp: {$last: "$timestamp"}
+      }
+    },
+    {
+      $sort: {
+        count: -1
+      }
+    }
+  ]
+}
+
 function checkLoginLogsHelper(message) {
   const jsonMessage = JSON.parse(message.content);
   const uniqueBrowserID = jsonMessage.unique_browser_id;
@@ -123,10 +147,46 @@ function checkLoginLogsHelper(message) {
       }
       else {
         // If no inactivity time is found, we can log it or handle it accordingly.
-        message.reply({
-          content: `No inactivity time found for Browser ID: \`${uniqueBrowserID}\`.`,
-          allowedMentions: { parse: [] },
-        });
+        const pipeline = activeDevicesSummaryPipeline(jsonMessage.user_id);
+
+        aggregate("Tracking", "CORE_PROP_CLOUD_LOGS", pipeline)
+          .then((result) => {
+            if (result.length > 0) {
+              // First check if number of devices and unique_browser_id are the same.
+              // If they match, there are no auto logout as the user used different devices for each session.
+              const headers = {}
+              result.forEach((device) => {
+                headers[device.user_agent] = headers[device.user_agent] || 0;
+                headers[device.user_agent]++;
+              });
+
+              if(Object.keys(headers).length != result.length) {
+                message.reply({
+                  content: `@everyone Attention: User ID \`${jsonMessage.user_id}\` has multiple active sessions in same device.\n ${JSON.stringify(result, null, 2)}`,
+                  allowedMentions: { parse: ["everyone"] }
+                })
+              }
+              else {
+                message.reply({
+                  content: `No inactivity time found for Browser ID: \`${uniqueBrowserID}\`.`,
+                  allowedMentions: { parse: [] },
+                });
+              }
+            } else {
+              // There should never be a case where no logs are found. If that happens, we made some mistake to call the query.
+              message.reply({
+                content: `@everyone Error: No logs found for Browser ID: \`${uniqueBrowserID}\`, User ID: \`${jsonMessage.user_id}\``,
+                allowedMentions: { parse: ["everyone"] },
+              });
+            }
+          })
+          .catch((err) => {
+            message.reply({
+              content: `@everyone Error: Error Finding logs for Browser ID: \`${uniqueBrowserID}\`, User ID: \`${jsonMessage.user_id}\``,
+              allowedMentions: { parse: ["everyone"] },
+            });
+            console.error("Error finding logs:", err);
+          });
       }
     })
     .catch((err) => {
