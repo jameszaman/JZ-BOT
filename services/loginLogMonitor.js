@@ -73,7 +73,7 @@ function inactivityTimeCheckPipeline(unique_browser_id) {
 function activeDevicesSummaryPipeline(user_id) {
   return [
     {
-      $match: { user_id: user_id }
+      $match: { user_id: user_id, mode: "production" }
     },
     {
       $group: {
@@ -87,8 +87,26 @@ function activeDevicesSummaryPipeline(user_id) {
       }
     },
     {
+      $match: {
+        count: {$gt: 1}
+      }
+    },
+    {
       $sort: {
         count: -1
+      }
+    },
+    {
+      $limit: 10
+    },
+    {
+      $project: {
+        _id: 0,
+        unique_browser_id: "$_id",
+        user_agent: 1,
+        count: 1,
+        ip: 1,
+        timestamp: 1
       }
     }
   ]
