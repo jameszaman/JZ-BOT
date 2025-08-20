@@ -180,7 +180,7 @@ function checkLoginLogsHelper(message) {
 
               if(Object.keys(headers).length != result.length) {
                 message.reply({
-                  content: `@everyone Attention: User ID \`${jsonMessage.user_id}\` has multiple active sessions in same device.\n ${JSON.stringify(result, null, 2)}`,
+                  content: `SESSION_ERROR: Attention: User ID \`${jsonMessage.user_id}\` has multiple active sessions in same device.\n ${JSON.stringify(result, null, 2)}`,
                   allowedMentions: { parse: ["everyone"] }
                 })
               }
